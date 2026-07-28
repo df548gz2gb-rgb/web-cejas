@@ -86,14 +86,12 @@
     background:linear-gradient(155deg, var(--pine) 0%, var(--pine-light) 55%, var(--gold) 130%);
     position:relative;overflow:hidden;
   }
-  .blob::after{
-    content:"";position:absolute;inset:0;
-    background:repeating-linear-gradient(115deg, rgba(255,255,255,0.05) 0 2px, transparent 2px 26px);
+  .blob img{
+    position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:center 15%;z-index:0;
   }
-  .blob .tag{
-    position:absolute;bottom:24px;left:24px;color:var(--cream);
-    font-family:'IBM Plex Mono',monospace;font-size:12px;letter-spacing:.08em;
-    opacity:.85;
+  .hero-caption{
+    text-align:center;margin:18px 0 0;color:var(--pine);
+    font-family:'IBM Plex Mono',monospace;font-size:12px;letter-spacing:.06em;
   }
 
   section{padding:64px 0;border-top:1px solid var(--line);}
@@ -105,9 +103,10 @@
   .about-photo{
     width:100%;aspect-ratio:4/5;border-radius:14px;
     background:linear-gradient(200deg,var(--gold),var(--rust) 90%);
-    position:relative;
+    position:relative;overflow:hidden;
   }
-  .about-photo::after{content:"";position:absolute;inset:10px;border:1px solid rgba(246,241,230,0.35);border-radius:8px;}
+  .about-photo img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:top center;z-index:0;}
+  .about-photo::after{content:"";position:absolute;inset:10px;border:1px solid rgba(246,241,230,0.35);border-radius:8px;z-index:1;}
   .creds{list-style:none;padding:0;margin:24px 0 0;display:flex;flex-direction:column;gap:10px;}
   .creds li{display:flex;gap:12px;font-size:14px;color:var(--pine);align-items:baseline;}
   .creds li::before{content:"—";color:var(--rust);}
@@ -297,13 +296,16 @@
           <a href="#sobre-mi" class="btn-ghost">Conóceme →</a>
         </div>
       </div>
-      <div class="blob"><span class="tag">Valencia · centro de micropigmentación y estética</span></div>
+      <div>
+        <div class="blob"><img src="images/hero.jpg" alt="Noemi Cuesta"></div>
+        <p class="hero-caption">Valencia · centro de micropigmentación y estética</p>
+      </div>
     </div>
   </section>
 
   <section id="sobre-mi">
     <div class="wrap about-grid">
-      <div class="about-photo"></div>
+      <div class="about-photo"><img src="images/sobre-mi.jpg" alt="Noemi Cuesta trabajando en un diseño de cejas"></div>
       <div>
         <div class="eyebrow">Sobre mí</div>
         <h2 style="font-size:30px;margin:10px 0 16px;">Hola, soy Noemi</h2>
