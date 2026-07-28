@@ -132,6 +132,7 @@
   /* ---------- GALLERY ---------- */
   .gallery-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;}
   .gpiece{aspect-ratio:3/4;border-radius:8px;background:var(--pine);position:relative;overflow:hidden;}
+  .gpiece img{width:100%;height:100%;object-fit:cover;display:block;}
   .gpiece span{
     position:absolute;bottom:10px;left:10px;color:var(--cream);
     font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:.06em;opacity:.8;
@@ -477,12 +478,15 @@
 
   <section id="galeria">
     <div class="wrap">
-      <div class="section-head"><h2>Galería</h2></div>
+      <div class="section-head">
+        <h2>Galería</h2>
+        <p style="max-width:320px;color:var(--pine-light);font-size:14px;">Resultados reales de micropigmentación de cejas efecto polvo.</p>
+      </div>
       <div class="gallery-grid">
-        <div class="gpiece" style="background:linear-gradient(160deg,var(--pine),var(--gold));"><span>efecto polvo · antes y después</span></div>
-        <div class="gpiece" style="background:linear-gradient(160deg,var(--rust),var(--pine-light));"><span>híbrida · antes y después</span></div>
-        <div class="gpiece" style="background:linear-gradient(160deg,var(--gold),var(--rust-deep));"><span>pelo a pelo · antes y después</span></div>
-        <div class="gpiece" style="background:linear-gradient(160deg,var(--pine-light),var(--ink));"><span>estudio</span></div>
+        <div class="gpiece"><img src="images/galeria/efecto-polvo-1.jpg" alt="Micropigmentación de cejas efecto polvo"></div>
+        <div class="gpiece"><img src="images/galeria/efecto-polvo-2.jpg" alt="Cejas efecto polvo, antes y después"></div>
+        <div class="gpiece"><img src="images/galeria/efecto-polvo-3.jpg" alt="Micropigmentación de cejas efecto polvo"></div>
+        <div class="gpiece"><img src="images/galeria/efecto-polvo-4.jpg" alt="Cejas efecto polvo, antes y después"></div>
       </div>
     </div>
   </section>
