@@ -1,0 +1,979 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Noemi Cuesta — Micropigmentación & Estética</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,500;0,600;1,400&family=Jost:wght@300;400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap');
+
+  :root{
+    --ink:#2E2320;
+    --pine:#7A4B45;
+    --pine-light:#9C6B60;
+    --parchment:#F5EAE4;
+    --parchment-deep:#EBD9CE;
+    --rust:#8C3B4F;
+    --rust-deep:#722F40;
+    --gold:#BD8A54;
+    --cream:#FBF4EF;
+    --line: rgba(46,35,32,0.14);
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:var(--parchment);
+    color:var(--ink);
+    font-family:'Jost', sans-serif;
+    font-weight:400;
+    line-height:1.6;
+  }
+  h1,h2,h3,.display{
+    font-family:'Cormorant Garamond', serif;
+    font-weight:500;
+    letter-spacing:0;
+    color:var(--ink);
+    margin:0;
+  }
+  .mono{
+    font-family:'IBM Plex Mono', monospace;
+  }
+  .eyebrow{
+    font-family:'IBM Plex Mono', monospace;
+    font-size:12px;
+    letter-spacing:0.14em;
+    text-transform:uppercase;
+    color:var(--rust);
+  }
+  a{color:inherit;}
+  button{font-family:inherit;cursor:pointer;}
+  .wrap{max-width:1080px;margin:0 auto;padding:0 32px;}
+
+  /* ---------- NAV ---------- */
+  header.site-nav{
+    position:sticky;top:0;z-index:40;
+    background:rgba(239,231,216,0.92);
+    backdrop-filter:blur(6px);
+    border-bottom:1px solid var(--line);
+  }
+  .nav-inner{
+    max-width:1080px;margin:0 auto;padding:18px 32px;
+    display:flex;align-items:center;justify-content:space-between;
+  }
+  .logo{font-family:'Cormorant Garamond',serif;font-size:24px;font-weight:600;letter-spacing:0.03em;}
+  .logo span{color:var(--rust);}
+  nav.links{display:flex;gap:28px;align-items:center;}
+  nav.links a{font-size:14px;text-decoration:none;color:var(--pine);}
+  nav.links a:hover{color:var(--rust);}
+  .btn{
+    border:none;border-radius:999px;padding:12px 22px;font-size:14px;font-weight:500;
+    transition:transform .15s ease, background .15s ease;
+  }
+  .btn:hover{transform:translateY(-1px);}
+  .btn-primary{background:var(--rust);color:var(--cream);}
+  .btn-primary:hover{background:var(--rust-deep);}
+  .btn-outline{background:transparent;border:1px solid var(--ink);color:var(--ink);}
+  .btn-ghost{background:transparent;color:var(--pine);text-decoration:underline;padding:6px 0;}
+
+  /* ---------- HERO ---------- */
+  .hero{padding:96px 0 72px;position:relative;}
+  .hero-grid{display:grid;grid-template-columns:1.15fr 0.85fr;gap:56px;align-items:center;}
+  .hero h1{font-size:60px;line-height:1.08;margin:18px 0 22px;font-weight:500;}
+  .hero p.sub{font-size:17px;max-width:440px;color:var(--pine);margin-bottom:32px;}
+  .hero-actions{display:flex;gap:16px;align-items:center;}
+  .blob{
+    width:100%;aspect-ratio:1/1.05;border-radius:46% 54% 60% 40% / 50% 45% 55% 50%;
+    background:linear-gradient(155deg, var(--pine) 0%, var(--pine-light) 55%, var(--gold) 130%);
+    position:relative;overflow:hidden;
+  }
+  .blob img{
+    position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:center 15%;z-index:0;
+  }
+  .hero-caption{
+    text-align:center;margin:18px 0 0;color:var(--pine);
+    font-family:'IBM Plex Mono',monospace;font-size:12px;letter-spacing:.06em;
+  }
+
+  section{padding:64px 0;border-top:1px solid var(--line);}
+  .section-head{display:flex;justify-content:space-between;align-items:flex-end;margin-bottom:36px;gap:24px;flex-wrap:wrap;}
+  .section-head h2{font-size:34px;}
+
+  /* ---------- ABOUT ---------- */
+  .about-grid{display:grid;grid-template-columns:0.8fr 1.2fr;gap:48px;align-items:start;}
+  .about-photo{
+    width:100%;aspect-ratio:4/5;border-radius:14px;
+    background:linear-gradient(200deg,var(--gold),var(--rust) 90%);
+    position:relative;overflow:hidden;
+  }
+  .about-photo img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:top center;z-index:0;}
+  .about-photo::after{content:"";position:absolute;inset:10px;border:1px solid rgba(246,241,230,0.35);border-radius:8px;z-index:1;}
+  .creds{list-style:none;padding:0;margin:24px 0 0;display:flex;flex-direction:column;gap:10px;}
+  .creds li{display:flex;gap:12px;font-size:14px;color:var(--pine);align-items:baseline;}
+  .creds li::before{content:"—";color:var(--rust);}
+
+  /* ---------- SERVICES (ticket stubs) ---------- */
+  .services-subhead{font-size:20px;font-weight:600;color:var(--rust);margin:0 0 18px;}
+  .services-grid + .services-subhead, .gallery-grid + .services-subhead{margin-top:44px;}
+  .services-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:24px;margin-bottom:0;}
+  .stub{
+    background:var(--cream);border-radius:10px;padding:26px 24px;
+    border:1px solid var(--line);position:relative;
+  }
+  .stub::before{
+    content:"";position:absolute;left:0;right:0;top:64%;
+    border-top:1.5px dashed var(--line);
+  }
+  .stub .stub-top{padding-bottom:22px;}
+  .stub .stub-bottom{padding-top:18px;display:flex;justify-content:space-between;align-items:center;}
+  .stub h3{font-size:20px;margin-bottom:8px;}
+  .stub p{font-size:14px;color:var(--pine-light);margin:0;}
+  .stub .price{font-family:'IBM Plex Mono',monospace;font-size:13px;color:var(--rust);}
+
+  /* ---------- GALLERY ---------- */
+  .gallery-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;}
+  .gpiece{aspect-ratio:3/4;border-radius:8px;background:var(--pine);position:relative;overflow:hidden;}
+  .gpiece img{width:100%;height:100%;object-fit:cover;display:block;}
+  .gpiece span{
+    position:absolute;bottom:10px;left:10px;color:var(--cream);
+    font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:.06em;opacity:.8;
+  }
+
+  /* ---------- CTA ---------- */
+  .cta-band{
+    background:var(--ink);color:var(--cream);border-radius:20px;padding:56px 48px;
+    display:flex;justify-content:space-between;align-items:center;gap:24px;flex-wrap:wrap;
+  }
+  .cta-band h2{color:var(--cream);font-size:30px;max-width:480px;}
+  .cta-band .btn-primary{background:var(--gold);color:var(--ink);}
+
+  footer{padding:40px 0 60px;text-align:center;}
+  footer .foot-link{font-size:12px;color:var(--pine-light);text-decoration:none;}
+
+  /* ---------- MODAL (booking) ---------- */
+  .overlay{
+    position:fixed;inset:0;background:rgba(24,33,25,0.55);
+    display:none;align-items:center;justify-content:center;z-index:100;padding:24px;
+  }
+  .overlay.open{display:flex;}
+  .modal{
+    background:var(--cream);border-radius:16px;max-width:560px;width:100%;
+    max-height:88vh;overflow-y:auto;padding:40px;position:relative;
+  }
+  .modal-close{
+    position:absolute;top:18px;right:18px;background:none;border:none;font-size:20px;color:var(--pine);
+  }
+  .step-eyebrow{display:flex;gap:8px;align-items:center;margin-bottom:6px;}
+  .step-dots{display:flex;gap:6px;}
+  .step-dots i{width:6px;height:6px;border-radius:50%;background:var(--line);display:block;}
+  .step-dots i.active{background:var(--rust);}
+  .q{margin-bottom:22px;}
+  .q label.qlabel{display:block;font-size:15px;margin-bottom:10px;font-weight:500;}
+  .opts{display:flex;flex-wrap:wrap;gap:10px;}
+  .opt{
+    border:1px solid var(--line);background:transparent;border-radius:999px;padding:9px 16px;font-size:13px;
+  }
+  .opt.selected{background:var(--pine);color:var(--cream);border-color:var(--pine);}
+  textarea, input[type=text], input[type=tel], input[type=date], input[type=time]{
+    width:100%;padding:12px 14px;border-radius:8px;border:1px solid var(--line);
+    font-family:inherit;font-size:14px;background:var(--parchment);color:var(--ink);
+  }
+  textarea{min-height:80px;resize:vertical;}
+  .field{margin-bottom:16px;}
+  .field label{display:block;font-size:13px;color:var(--pine);margin-bottom:6px;}
+  .modal-nav{display:flex;justify-content:space-between;margin-top:28px;}
+  .ticket-divider{
+    border:none;border-top:1.5px dashed var(--line);margin:26px 0;position:relative;
+  }
+  .confirm-box{text-align:center;padding:20px 0;}
+  .confirm-box .stamp{
+    display:inline-block;border:2px solid var(--rust);color:var(--rust);border-radius:8px;
+    padding:6px 14px;font-family:'IBM Plex Mono',monospace;font-size:12px;letter-spacing:.1em;
+    transform:rotate(-3deg);margin-bottom:16px;
+  }
+
+  /* ---------- BACKSTAGE ---------- */
+  #backstage{display:none;min-height:100vh;background:var(--ink);color:var(--cream);}
+  #backstage.open{display:block;}
+  .bs-login{
+    min-height:100vh;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:18px;
+  }
+  .bs-login .panel{
+    background:var(--pine);padding:40px;border-radius:14px;width:100%;max-width:360px;
+  }
+  .bs-login input{background:var(--ink);color:var(--cream);border-color:rgba(246,241,230,0.2);}
+  .bs-login .hint{font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--gold);margin-top:10px;}
+  .bs-topbar{
+    display:flex;justify-content:space-between;align-items:center;padding:22px 36px;border-bottom:1px solid rgba(246,241,230,0.12);
+  }
+  .bs-tabs{display:flex;gap:6px;padding:20px 36px 0;}
+  .bs-tab{
+    background:none;border:none;color:rgba(246,241,230,0.6);padding:10px 16px;border-radius:8px 8px 0 0;font-size:14px;
+  }
+  .bs-tab.active{background:rgba(246,241,230,0.08);color:var(--cream);}
+  .bs-body{padding:28px 36px 60px;}
+  .card{
+    background:rgba(246,241,230,0.06);border:1px solid rgba(246,241,230,0.12);border-radius:12px;padding:20px;
+  }
+  .req-card{margin-bottom:14px;}
+  .req-top{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;}
+  .badge{font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:.06em;padding:4px 10px;border-radius:999px;}
+  .badge.pendiente{background:rgba(188,154,84,0.2);color:var(--gold);}
+  .badge.confirmada{background:rgba(124,139,114,0.25);color:#9CC49B;}
+  .badge.descartada{background:rgba(162,87,58,0.2);color:#D69A82;}
+  .answers{margin-top:10px;font-size:13px;color:rgba(246,241,230,0.75);display:flex;flex-direction:column;gap:4px;}
+  .req-actions{display:flex;gap:8px;margin-top:14px;}
+  .btn-mini{border:1px solid rgba(246,241,230,0.3);background:none;color:var(--cream);padding:7px 14px;border-radius:999px;font-size:12px;}
+  .btn-mini.confirm{background:var(--gold);color:var(--ink);border-color:var(--gold);}
+  .inline-form{display:none;margin-top:14px;gap:10px;flex-wrap:wrap;align-items:flex-end;}
+  .inline-form.open{display:flex;}
+  .inline-form .field{margin-bottom:0;min-width:140px;}
+  .inline-form label{color:rgba(246,241,230,0.6);}
+  .inline-form input{background:var(--ink);color:var(--cream);border-color:rgba(246,241,230,0.2);}
+
+  .cal-wrap{display:grid;grid-template-columns:1.4fr 1fr;gap:24px;align-items:start;}
+  .cal-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;}
+  .cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:6px;}
+  .cal-dow{font-family:'IBM Plex Mono',monospace;font-size:11px;color:rgba(246,241,230,0.4);text-align:center;padding-bottom:6px;}
+  .cal-cell{
+    aspect-ratio:1;border-radius:8px;background:rgba(246,241,230,0.04);border:1px solid rgba(246,241,230,0.08);
+    display:flex;flex-direction:column;align-items:center;justify-content:center;font-size:13px;position:relative;
+  }
+  .cal-cell.empty{background:none;border:none;}
+  .cal-cell.today{border-color:var(--gold);}
+  .cal-cell.selected{background:var(--gold);color:var(--ink);}
+  .cal-cell .dot{width:5px;height:5px;border-radius:50%;background:var(--rust);position:absolute;bottom:6px;}
+  .cal-cell.selected .dot{background:var(--ink);}
+  .day-appts{display:flex;flex-direction:column;gap:8px;margin-top:14px;}
+  .appt-row{display:flex;justify-content:space-between;font-size:13px;padding:10px 12px;background:rgba(246,241,230,0.05);border-radius:8px;}
+  .add-appt-form{display:flex;flex-direction:column;gap:10px;margin-top:14px;}
+  .add-appt-form input{background:var(--ink);color:var(--cream);border-color:rgba(246,241,230,0.2);}
+
+  .clients-toolbar{display:flex;justify-content:space-between;gap:16px;margin-bottom:18px;flex-wrap:wrap;}
+  .client-row{
+    display:flex;justify-content:space-between;align-items:center;padding:14px 16px;border-radius:10px;
+    background:rgba(246,241,230,0.05);margin-bottom:8px;cursor:pointer;
+  }
+  .client-detail{display:none;margin-top:10px;padding:14px 16px;background:rgba(246,241,230,0.04);border-radius:10px;font-size:13px;}
+  .client-detail.open{display:block;}
+  .client-detail textarea{margin-top:8px;}
+
+  @media (max-width:860px){
+    .hero-grid{grid-template-columns:1fr;}
+    .about-grid{grid-template-columns:1fr;}
+    .services-grid{grid-template-columns:1fr;}
+    .gallery-grid{grid-template-columns:repeat(2,1fr);}
+    .cal-wrap{grid-template-columns:1fr;}
+    nav.links{display:none;}
+    .hero h1{font-size:38px;}
+  }
+</style>
+</head>
+<body>
+
+<!-- =================== SITIO PÚBLICO =================== -->
+<div id="public-site">
+
+  <header class="site-nav">
+    <div class="nav-inner">
+      <div class="logo">Noemi <span>Cuesta</span></div>
+      <nav class="links">
+        <a href="#sobre-mi">Sobre mí</a>
+        <a href="#servicios">Servicios</a>
+        <a href="#galeria">Galería</a>
+        <a href="#contacto">Contacto</a>
+      </nav>
+      <button class="btn btn-primary" onclick="openBooking()">Reservar cita</button>
+    </div>
+  </header>
+
+  <section class="hero" style="border-top:none;">
+    <div class="wrap hero-grid">
+      <div>
+        <div class="eyebrow">Micropigmentación de cejas</div>
+        <h1>Cejas diseñadas<br>a tu medida.</h1>
+        <p class="sub">Micropigmentación de cejas semipermanente, pensada para realzar tu rostro de forma natural.</p>
+        <div class="hero-actions">
+          <button class="btn btn-primary" onclick="openBooking()">Reservar cita</button>
+          <a href="#sobre-mi" class="btn-ghost">Conóceme →</a>
+        </div>
+      </div>
+      <div>
+        <div class="blob"><img src="images/hero.jpg" alt="Noemi Cuesta"></div>
+        <p class="hero-caption">Valencia · centro de micropigmentación y estética</p>
+      </div>
+    </div>
+  </section>
+
+  <section id="sobre-mi">
+    <div class="wrap about-grid">
+      <div class="about-photo"><img src="images/sobre-mi.jpg" alt="Noemi Cuesta trabajando en un diseño de cejas"></div>
+      <div>
+        <div class="eyebrow">Sobre mí</div>
+        <h2 style="font-size:30px;margin:10px 0 16px;">Hola, soy Noemi</h2>
+        <p style="color:var(--pine);max-width:520px;">Llevo 1 año especializándome en micropigmentación de cejas, cuidando cada detalle para que el resultado sea natural, duradero y hecho a tu medida. Cada rostro es distinto, y así lo trato.</p>
+        <ul class="creds">
+          <li>Formada con una profesional ganadora del WULOP</li>
+          <li>Especialista en micropigmentación de cejas: efecto polvo, híbrida y pelo a pelo</li>
+          <li>Materiales y pigmentos de calidad profesional</li>
+          <li>Estudio de tu piel y rasgos antes de cada diseño</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <section id="servicios">
+    <div class="wrap">
+      <div class="section-head">
+        <h2>Servicios</h2>
+        <p style="max-width:320px;color:var(--pine-light);font-size:14px;">Micropigmentación de cejas y tratamientos relacionados, adaptados a cada rostro.</p>
+      </div>
+
+      <h3 class="services-subhead">Micropigmentación de cejas</h3>
+      <div class="services-grid">
+        <div class="stub">
+          <div class="stub-top">
+            <h3>Efecto polvo</h3>
+            <p>Acabado difuminado tipo maquillaje en polvo. Sin retoque.</p>
+          </div>
+          <div class="stub-bottom">
+            <span class="price">1:30h</span>
+            <span class="price">90€</span>
+          </div>
+        </div>
+        <div class="stub">
+          <div class="stub-top">
+            <h3>Híbrida</h3>
+            <p>Pelo a pelo combinado con sombreado final. Sin retoque.</p>
+          </div>
+          <div class="stub-bottom">
+            <span class="price">2h</span>
+            <span class="price">95€</span>
+          </div>
+        </div>
+        <div class="stub">
+          <div class="stub-top">
+            <h3>Pelo a pelo</h3>
+            <p>Trazos finos que imitan el vello natural. Sin retoque.</p>
+          </div>
+          <div class="stub-bottom">
+            <span class="price">2h</span>
+            <span class="price">100€</span>
+          </div>
+        </div>
+        <div class="stub">
+          <div class="stub-top">
+            <h3>Micropigmentación + neutralización</h3>
+            <p>Micropigmentación con neutralización de tonos no deseados.</p>
+          </div>
+          <div class="stub-bottom">
+            <span class="price">2h</span>
+            <span class="price">110€</span>
+          </div>
+        </div>
+      </div>
+
+      <h3 class="services-subhead">Retoques</h3>
+      <div class="services-grid">
+        <div class="stub">
+          <div class="stub-top">
+            <h3>Retoque 1-2 meses</h3>
+            <p>Repaso de color y forma tras la primera sesión.</p>
+          </div>
+          <div class="stub-bottom">
+            <span class="price">30/45 min</span>
+            <span class="price">20€</span>
+          </div>
+        </div>
+        <div class="stub">
+          <div class="stub-top">
+            <h3>Retoque 3-12 meses</h3>
+            <p>Mantenimiento del color a medio plazo.</p>
+          </div>
+          <div class="stub-bottom">
+            <span class="price">30/45 min</span>
+            <span class="price">45€</span>
+          </div>
+        </div>
+        <div class="stub">
+          <div class="stub-top">
+            <h3>Retoque 12-24 meses</h3>
+            <p>A veces es necesario un servicio completo; el precio se valora por privado.</p>
+          </div>
+          <div class="stub-bottom">
+            <span class="price">A consultar</span>
+            <span class="price">Precio por privado</span>
+          </div>
+        </div>
+      </div>
+
+      <h3 class="services-subhead">Removedor de micropigmentación</h3>
+      <div class="services-grid">
+        <div class="stub">
+          <div class="stub-top">
+            <h3>Sesión suelta</h3>
+            <p>Sesión individual de removedor.</p>
+          </div>
+          <div class="stub-bottom">
+            <span class="price">30 min</span>
+            <span class="price">30€</span>
+          </div>
+        </div>
+        <div class="stub">
+          <div class="stub-top">
+            <h3>Pack 3 sesiones</h3>
+            <p>Ahorra 10€ frente al precio de sesión suelta.</p>
+          </div>
+          <div class="stub-bottom">
+            <span class="price">Ahorro 10€</span>
+            <span class="price">80€</span>
+          </div>
+        </div>
+        <div class="stub">
+          <div class="stub-top">
+            <h3>Pack 5 sesiones</h3>
+            <p>Ahorra 30€ frente al precio de sesión suelta.</p>
+          </div>
+          <div class="stub-bottom">
+            <span class="price">Ahorro 30€</span>
+            <span class="price">120€</span>
+          </div>
+        </div>
+        <div class="stub">
+          <div class="stub-top">
+            <h3>Pack 8 sesiones</h3>
+            <p>Ahorra 60€ frente al precio de sesión suelta.</p>
+          </div>
+          <div class="stub-bottom">
+            <span class="price">Ahorro 60€</span>
+            <span class="price">180€</span>
+          </div>
+        </div>
+      </div>
+
+      <h3 class="services-subhead">Diseño de cejas</h3>
+      <div class="services-grid">
+        <div class="stub">
+          <div class="stub-top">
+            <h3>Diseño + henna + depilación</h3>
+            <p>Diseño de cejas con henna y depilación incluida.</p>
+          </div>
+          <div class="stub-bottom">
+            <span class="price">35 min</span>
+            <span class="price">18€</span>
+          </div>
+        </div>
+        <div class="stub">
+          <div class="stub-top">
+            <h3>Diseño + henna</h3>
+            <p>Diseño de cejas con henna.</p>
+          </div>
+          <div class="stub-bottom">
+            <span class="price">30 min</span>
+            <span class="price">15€</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="galeria">
+    <div class="wrap">
+      <div class="section-head">
+        <h2>Galería</h2>
+        <p style="max-width:320px;color:var(--pine-light);font-size:14px;">Resultados reales de micropigmentación de cejas.</p>
+      </div>
+
+      <h3 class="services-subhead">Efecto polvo</h3>
+      <div class="gallery-grid">
+        <div class="gpiece"><img src="images/galeria/efecto-polvo-1.jpg" alt="Micropigmentación de cejas efecto polvo"></div>
+        <div class="gpiece"><img src="images/galeria/efecto-polvo-2.jpg" alt="Cejas efecto polvo, antes y después"></div>
+        <div class="gpiece"><img src="images/galeria/efecto-polvo-3.jpg" alt="Micropigmentación de cejas efecto polvo"></div>
+        <div class="gpiece"><img src="images/galeria/efecto-polvo-4.jpg" alt="Cejas efecto polvo, antes y después"></div>
+        <div class="gpiece"><img src="images/galeria/efecto-polvo-5.jpg" alt="Micropigmentación de cejas efecto polvo"></div>
+        <div class="gpiece"><img src="images/galeria/efecto-polvo-6.jpg" alt="Cejas efecto polvo, antes y después"></div>
+        <div class="gpiece"><img src="images/galeria/efecto-polvo-7.jpg" alt="Micropigmentación de cejas efecto polvo"></div>
+        <div class="gpiece"><img src="images/galeria/efecto-polvo-8.jpg" alt="Cejas efecto polvo, antes y después"></div>
+        <div class="gpiece"><img src="images/galeria/efecto-polvo-9.jpg" alt="Cejas efecto polvo, antes y después"></div>
+        <div class="gpiece"><img src="images/galeria/efecto-polvo-10.jpg" alt="Cejas efecto polvo, antes y después"></div>
+      </div>
+
+      <h3 class="services-subhead">Efecto híbrida</h3>
+      <div class="gallery-grid">
+        <div class="gpiece"><img src="images/galeria/efecto-hibrida-1.jpg" alt="Micropigmentación de cejas efecto híbrida"></div>
+        <div class="gpiece"><img src="images/galeria/efecto-hibrida-2.jpg" alt="Cejas efecto híbrida, antes y después"></div>
+      </div>
+    </div>
+  </section>
+
+  <section id="contacto">
+    <div class="wrap">
+      <div class="cta-band">
+        <h2>¿Reservamos tu cita?</h2>
+        <button class="btn btn-primary" onclick="openBooking()">Reservar cita</button>
+      </div>
+    </div>
+  </section>
+
+  <footer>
+    <p style="font-size:13px;color:var(--pine-light);">Noemi Cuesta — Micropigmentación & Estética</p>
+    <a class="foot-link" href="#" onclick="openBackstage();return false;">Acceso profesional</a>
+  </footer>
+</div>
+
+<!-- =================== MODAL DE RESERVA =================== -->
+<div class="overlay" id="booking-overlay">
+  <div class="modal">
+    <button class="modal-close" onclick="closeBooking()">✕</button>
+
+    <!-- Paso 1: encuesta -->
+    <div id="step-survey">
+      <div class="step-eyebrow">
+        <span class="eyebrow">Paso 1 de 3</span>
+        <div class="step-dots"><i class="active"></i><i></i><i></i></div>
+      </div>
+      <h3 style="font-size:24px;margin-bottom:20px;">Antes de reservar, cuéntame un poco</h3>
+
+      <div class="q">
+        <label class="qlabel">¿Qué tratamiento te interesa?</label>
+        <div class="opts" data-q="tipo">
+          <button class="opt" data-v="Efecto polvo">Efecto polvo</button>
+          <button class="opt" data-v="Híbrida">Híbrida</button>
+          <button class="opt" data-v="Pelo a pelo">Pelo a pelo</button>
+          <button class="opt" data-v="Retoque">Retoque</button>
+          <button class="opt" data-v="Removedor">Removedor</button>
+          <button class="opt" data-v="Diseño de cejas">Diseño de cejas</button>
+          <button class="opt" data-v="Aún no lo sé">Aún no lo sé</button>
+        </div>
+      </div>
+
+      <div class="q">
+        <label class="qlabel">¿Es tu primera vez con micropigmentación?</label>
+        <div class="opts" data-q="primeraVez">
+          <button class="opt" data-v="Sí">Sí</button>
+          <button class="opt" data-v="No">No</button>
+        </div>
+      </div>
+
+      <div class="q">
+        <label class="qlabel">¿Qué franja horaria prefieres?</label>
+        <div class="opts" data-q="franja">
+          <button class="opt" data-v="Mañana">Mañana</button>
+          <button class="opt" data-v="Tarde">Tarde</button>
+          <button class="opt" data-v="Flexible">Flexible</button>
+        </div>
+      </div>
+
+      <div class="q">
+        <label class="qlabel">Cuéntame qué buscas o si tienes alguna duda o referencia</label>
+        <textarea id="motivo" placeholder="Cuéntame brevemente..."></textarea>
+      </div>
+
+      <div class="modal-nav">
+        <span></span>
+        <button class="btn btn-primary" onclick="goToContactStep()">Continuar</button>
+      </div>
+    </div>
+
+    <!-- Paso 2: contacto -->
+    <div id="step-contact" style="display:none;">
+      <div class="step-eyebrow">
+        <span class="eyebrow">Paso 2 de 3</span>
+        <div class="step-dots"><i></i><i class="active"></i><i></i></div>
+      </div>
+      <h3 style="font-size:24px;margin-bottom:20px;">¿Cómo te localizo?</h3>
+      <div class="field">
+        <label>Nombre</label>
+        <input type="text" id="contact-name" placeholder="Tu nombre">
+      </div>
+      <div class="field">
+        <label>Teléfono</label>
+        <input type="tel" id="contact-phone" placeholder="Tu teléfono">
+      </div>
+      <div class="modal-nav">
+        <button class="btn btn-outline" onclick="backToSurvey()">Atrás</button>
+        <button class="btn btn-primary" onclick="submitBooking()">Enviar solicitud</button>
+      </div>
+    </div>
+
+    <!-- Paso 3: confirmación -->
+    <div id="step-done" style="display:none;">
+      <div class="confirm-box">
+        <div class="stamp">solicitud recibida</div>
+        <h3 style="font-size:24px;margin-bottom:10px;">Gracias, <span id="done-name"></span></h3>
+        <p style="color:var(--pine);max-width:380px;margin:0 auto 20px;">He recibido tu solicitud. Te contactaré personalmente en las próximas 24–48h para confirmar día y hora.</p>
+        <hr class="ticket-divider">
+        <p style="font-size:12px;color:var(--pine-light);" class="mono">En producción, esta información llegaría automáticamente a tu correo.</p>
+        <button class="btn btn-outline" style="margin-top:20px;" onclick="closeBooking()">Cerrar</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- =================== BACKSTAGE =================== -->
+<div id="backstage">
+
+  <div class="bs-login" id="bs-login">
+    <div class="panel">
+      <div class="eyebrow" style="margin-bottom:8px;">Acceso profesional</div>
+      <h3 style="font-size:22px;color:var(--cream);margin-bottom:18px;">Entrar al backstage</h3>
+      <div class="field">
+        <label style="color:rgba(246,241,230,0.6);">Clave de acceso</label>
+        <input type="text" id="bs-password" placeholder="••••••••">
+      </div>
+      <button class="btn btn-primary" style="width:100%;" onclick="tryLogin()">Entrar</button>
+      <p class="hint">Clave de demostración: demo123</p>
+      <button class="btn-ghost" style="color:rgba(246,241,230,0.6);margin-top:14px;" onclick="closeBackstage()">← Volver a la web</button>
+    </div>
+  </div>
+
+  <div id="bs-dashboard" style="display:none;">
+    <div class="bs-topbar">
+      <div class="logo" style="color:var(--cream);">Noemi <span style="color:var(--gold);">Cuesta</span> · backstage</div>
+      <button class="btn-ghost" style="color:rgba(246,241,230,0.6);" onclick="closeBackstage()">Salir al sitio público →</button>
+    </div>
+    <div class="bs-tabs">
+      <button class="bs-tab active" id="tab-btn-solicitudes" onclick="showTab('solicitudes')">Solicitudes</button>
+      <button class="bs-tab" id="tab-btn-calendario" onclick="showTab('calendario')">Calendario</button>
+      <button class="bs-tab" id="tab-btn-clientes" onclick="showTab('clientes')">Clientes</button>
+    </div>
+    <div class="bs-body">
+
+      <div id="tab-solicitudes">
+        <p style="color:rgba(246,241,230,0.6);margin-bottom:18px;font-size:14px;">Solicitudes enviadas desde el formulario de reserva de la web.</p>
+        <div id="requests-list"></div>
+      </div>
+
+      <div id="tab-calendario" style="display:none;">
+        <div class="cal-wrap">
+          <div class="card">
+            <div class="cal-head">
+              <button class="btn-mini" onclick="changeMonth(-1)">←</button>
+              <h3 id="cal-title" style="font-size:18px;color:var(--cream);"></h3>
+              <button class="btn-mini" onclick="changeMonth(1)">→</button>
+            </div>
+            <div class="cal-grid" id="cal-grid"></div>
+          </div>
+          <div class="card">
+            <h3 style="font-size:16px;color:var(--cream);margin-bottom:6px;" id="day-panel-title">Selecciona un día</h3>
+            <div class="day-appts" id="day-appts"></div>
+            <div class="add-appt-form" id="add-appt-form" style="display:none;">
+              <input type="text" id="new-appt-name" placeholder="Nombre de la clienta/cliente">
+              <input type="time" id="new-appt-time">
+              <input type="text" id="new-appt-note" placeholder="Nota (opcional)">
+              <button class="btn btn-primary" onclick="addAppointment()">Añadir al calendario</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div id="tab-clientes" style="display:none;">
+        <div class="clients-toolbar">
+          <input type="text" id="client-search" placeholder="Buscar cliente..." style="max-width:260px;" oninput="renderClients()">
+        </div>
+        <div class="card" style="margin-bottom:18px;">
+          <h3 style="font-size:15px;color:var(--cream);margin-bottom:12px;">Añadir cliente manualmente</h3>
+          <div style="display:flex;gap:10px;flex-wrap:wrap;">
+            <input type="text" id="new-client-name" placeholder="Nombre" style="flex:1;min-width:160px;background:var(--ink);color:var(--cream);border-color:rgba(246,241,230,0.2);">
+            <input type="text" id="new-client-phone" placeholder="Teléfono" style="flex:1;min-width:160px;background:var(--ink);color:var(--cream);border-color:rgba(246,241,230,0.2);">
+            <button class="btn btn-primary" onclick="addClientManual()">Añadir</button>
+          </div>
+        </div>
+        <div id="clients-list"></div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<script>
+/* ============================================================
+   ESTADO — en un producto real esto viviría en una base de datos
+   real (Supabase, Postgres, etc). Aquí usamos window.storage
+   para que el prototipo recuerde los datos entre visitas.
+============================================================ */
+let DATA = { requests: [], clients: [], appointments: [] };
+let survey = { tipo:null, primeraVez:null, franja:null };
+let calDate = new Date();
+let selectedDay = null;
+
+async function loadData(){
+  try{
+    const res = await window.storage.get('raiz-data', false);
+    if(res && res.value){ DATA = JSON.parse(res.value); }
+  }catch(e){ /* no hay datos guardados aún */ }
+  renderAll();
+}
+async function saveData(){
+  try{ await window.storage.set('raiz-data', JSON.stringify(DATA), false); }
+  catch(e){ console.error('Error guardando datos', e); }
+}
+
+/* ---------------- BOOKING MODAL ---------------- */
+function openBooking(){
+  document.getElementById('booking-overlay').classList.add('open');
+  document.getElementById('step-survey').style.display='block';
+  document.getElementById('step-contact').style.display='none';
+  document.getElementById('step-done').style.display='none';
+}
+function closeBooking(){
+  document.getElementById('booking-overlay').classList.remove('open');
+  survey = { tipo:null, primeraVez:null, franja:null };
+  document.getElementById('motivo').value='';
+  document.getElementById('contact-name').value='';
+  document.getElementById('contact-phone').value='';
+  document.querySelectorAll('.opt').forEach(o=>o.classList.remove('selected'));
+}
+document.querySelectorAll('.opts').forEach(group=>{
+  group.addEventListener('click', e=>{
+    const btn = e.target.closest('.opt');
+    if(!btn) return;
+    const q = group.dataset.q;
+    survey[q] = btn.dataset.v;
+    group.querySelectorAll('.opt').forEach(o=>o.classList.remove('selected'));
+    btn.classList.add('selected');
+  });
+});
+function goToContactStep(){
+  document.getElementById('step-survey').style.display='none';
+  document.getElementById('step-contact').style.display='block';
+}
+function backToSurvey(){
+  document.getElementById('step-contact').style.display='none';
+  document.getElementById('step-survey').style.display='block';
+}
+async function submitBooking(){
+  const name = document.getElementById('contact-name').value.trim();
+  const phone = document.getElementById('contact-phone').value.trim();
+  if(!name || !phone){ alert('Por favor, completa nombre y teléfono.'); return; }
+  const motivo = document.getElementById('motivo').value.trim();
+  const req = {
+    id: 'req_'+Date.now(),
+    name, phone,
+    answers: { ...survey, motivo },
+    status: 'pendiente',
+    createdAt: new Date().toISOString()
+  };
+  DATA.requests.unshift(req);
+  await saveData();
+  renderRequests();
+
+  document.getElementById('step-contact').style.display='none';
+  document.getElementById('step-done').style.display='block';
+  document.getElementById('done-name').textContent = name;
+
+  // Simulación del email que recibiría la profesional
+  console.log('%c[Simulación de email]', 'color:#A2573A;font-weight:bold;',
+    `Nueva solicitud de reserva\nNombre: ${name}\nTeléfono: ${phone}\nTipo: ${survey.tipo}\nPrimera vez: ${survey.primeraVez}\nFranja: ${survey.franja}\nMotivo: ${motivo}`);
+}
+
+/* ---------------- BACKSTAGE: LOGIN ---------------- */
+function openBackstage(){
+  document.getElementById('backstage').classList.add('open');
+}
+function closeBackstage(){
+  document.getElementById('backstage').classList.remove('open');
+  document.getElementById('bs-login').style.display='flex';
+  document.getElementById('bs-dashboard').style.display='none';
+  document.getElementById('bs-password').value='';
+}
+function tryLogin(){
+  const pw = document.getElementById('bs-password').value;
+  if(pw === 'demo123'){
+    document.getElementById('bs-login').style.display='none';
+    document.getElementById('bs-dashboard').style.display='block';
+    renderAll();
+  } else {
+    alert('Clave incorrecta (pista: demo123)');
+  }
+}
+
+/* ---------------- TABS ---------------- */
+function showTab(name){
+  ['solicitudes','calendario','clientes'].forEach(t=>{
+    document.getElementById('tab-'+t).style.display = (t===name)?'block':'none';
+    document.getElementById('tab-btn-'+t).classList.toggle('active', t===name);
+  });
+  if(name==='calendario') renderCalendar();
+  if(name==='clientes') renderClients();
+}
+
+/* ---------------- SOLICITUDES ---------------- */
+function renderRequests(){
+  const list = document.getElementById('requests-list');
+  if(!list) return;
+  if(DATA.requests.length===0){
+    list.innerHTML = '<p style="color:rgba(246,241,230,0.5);font-size:14px;">Todavía no hay solicitudes. Aparecerán aquí en cuanto alguien reserve desde la web.</p>';
+    return;
+  }
+  list.innerHTML = DATA.requests.map(r=>`
+    <div class="card req-card">
+      <div class="req-top">
+        <div>
+          <strong style="font-size:15px;">${r.name}</strong>
+          <div class="mono" style="font-size:12px;color:rgba(246,241,230,0.5);">${r.phone}</div>
+        </div>
+        <span class="badge ${r.status}">${r.status}</span>
+      </div>
+      <div class="answers">
+        <span>Tipo: ${r.answers.tipo||'—'}</span>
+        <span>Primera vez: ${r.answers.primeraVez||'—'}</span>
+        <span>Franja preferida: ${r.answers.franja||'—'}</span>
+        ${r.answers.motivo? `<span>Motivo: ${escapeHtml(r.answers.motivo)}</span>`:''}
+      </div>
+      ${r.status==='pendiente' ? `
+      <div class="req-actions">
+        <button class="btn-mini confirm" onclick="toggleInlineForm('${r.id}')">Confirmar cita</button>
+        <button class="btn-mini" onclick="discardRequest('${r.id}')">Descartar</button>
+      </div>
+      <div class="inline-form" id="form-${r.id}">
+        <div class="field"><label>Fecha</label><input type="date" id="date-${r.id}"></div>
+        <div class="field"><label>Hora</label><input type="time" id="time-${r.id}"></div>
+        <button class="btn-mini confirm" onclick="confirmRequest('${r.id}')">Guardar cita</button>
+      </div>` : ''}
+    </div>
+  `).join('');
+}
+function toggleInlineForm(id){
+  document.getElementById('form-'+id).classList.toggle('open');
+}
+async function discardRequest(id){
+  const r = DATA.requests.find(x=>x.id===id);
+  if(r) r.status='descartada';
+  await saveData();
+  renderRequests();
+}
+async function confirmRequest(id){
+  const r = DATA.requests.find(x=>x.id===id);
+  const date = document.getElementById('date-'+id).value;
+  const time = document.getElementById('time-'+id).value;
+  if(!date || !time){ alert('Indica fecha y hora.'); return; }
+  r.status='confirmada';
+  DATA.appointments.push({
+    id:'appt_'+Date.now(), date, time, clientName:r.name, phone:r.phone,
+    note:r.answers.motivo||'', requestId:r.id
+  });
+  // añadir o actualizar cliente
+  let client = DATA.clients.find(c=>c.phone===r.phone);
+  if(!client){
+    client = { id:'cli_'+Date.now(), name:r.name, phone:r.phone, notes:r.answers.motivo||'', createdAt:new Date().toISOString() };
+    DATA.clients.push(client);
+  }
+  await saveData();
+  renderRequests(); renderCalendar(); renderClients();
+}
+
+/* ---------------- CALENDARIO ---------------- */
+function renderCalendar(){
+  const grid = document.getElementById('cal-grid');
+  const title = document.getElementById('cal-title');
+  const year = calDate.getFullYear(), month = calDate.getMonth();
+  const monthNames = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
+  title.textContent = `${monthNames[month]} ${year}`;
+
+  const first = new Date(year, month, 1);
+  const startOffset = (first.getDay()+6)%7; // lunes=0
+  const daysInMonth = new Date(year, month+1, 0).getDate();
+  const todayStr = new Date().toISOString().slice(0,10);
+
+  let html = ['L','M','X','J','V','S','D'].map(d=>`<div class="cal-dow">${d}</div>`).join('');
+  for(let i=0;i<startOffset;i++) html += `<div class="cal-cell empty"></div>`;
+  for(let d=1; d<=daysInMonth; d++){
+    const dateStr = `${year}-${String(month+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+    const hasAppt = DATA.appointments.some(a=>a.date===dateStr);
+    const isToday = dateStr===todayStr;
+    const isSelected = dateStr===selectedDay;
+    html += `<div class="cal-cell ${isToday?'today':''} ${isSelected?'selected':''}" onclick="selectDay('${dateStr}')">${d}${hasAppt?'<div class="dot"></div>':''}</div>`;
+  }
+  grid.innerHTML = html;
+  if(selectedDay) renderDayPanel();
+}
+function changeMonth(delta){
+  calDate.setMonth(calDate.getMonth()+delta);
+  renderCalendar();
+}
+function selectDay(dateStr){
+  selectedDay = dateStr;
+  renderCalendar();
+  renderDayPanel();
+}
+function renderDayPanel(){
+  document.getElementById('day-panel-title').textContent = selectedDay ? `Citas — ${selectedDay}` : 'Selecciona un día';
+  const appts = DATA.appointments.filter(a=>a.date===selectedDay).sort((a,b)=>a.time.localeCompare(b.time));
+  const box = document.getElementById('day-appts');
+  box.innerHTML = appts.length ? appts.map(a=>`
+    <div class="appt-row">
+      <span>${a.time} · ${a.clientName}</span>
+      <span style="color:rgba(246,241,230,0.5);">${a.note?a.note.slice(0,24):''}</span>
+    </div>`).join('') : '<p style="color:rgba(246,241,230,0.4);font-size:13px;">Sin citas este día.</p>';
+  document.getElementById('add-appt-form').style.display = selectedDay ? 'flex' : 'none';
+}
+async function addAppointment(){
+  const name = document.getElementById('new-appt-name').value.trim();
+  const time = document.getElementById('new-appt-time').value;
+  const note = document.getElementById('new-appt-note').value.trim();
+  if(!selectedDay || !name || !time){ alert('Completa nombre y hora.'); return; }
+  DATA.appointments.push({ id:'appt_'+Date.now(), date:selectedDay, time, clientName:name, phone:'', note });
+  await saveData();
+  document.getElementById('new-appt-name').value='';
+  document.getElementById('new-appt-time').value='';
+  document.getElementById('new-appt-note').value='';
+  renderCalendar(); renderDayPanel();
+}
+
+/* ---------------- CLIENTES ---------------- */
+function renderClients(){
+  const list = document.getElementById('clients-list');
+  if(!list) return;
+  const q = (document.getElementById('client-search')?.value||'').toLowerCase();
+  const filtered = DATA.clients.filter(c=> c.name.toLowerCase().includes(q) || c.phone.includes(q));
+  if(filtered.length===0){
+    list.innerHTML = '<p style="color:rgba(246,241,230,0.5);font-size:14px;">No hay clientes todavía.</p>';
+    return;
+  }
+  list.innerHTML = filtered.map(c=>`
+    <div>
+      <div class="client-row" onclick="toggleClient('${c.id}')">
+        <div><strong>${c.name}</strong> <span class="mono" style="color:rgba(246,241,230,0.5);font-size:12px;">${c.phone}</span></div>
+        <span style="font-size:12px;color:rgba(246,241,230,0.4);">Ver ficha</span>
+      </div>
+      <div class="client-detail" id="detail-${c.id}">
+        <label style="color:rgba(246,241,230,0.6);font-size:12px;">Notas</label>
+        <textarea onchange="updateClientNotes('${c.id}', this.value)">${escapeHtml(c.notes||'')}</textarea>
+      </div>
+    </div>
+  `).join('');
+}
+function toggleClient(id){
+  document.getElementById('detail-'+id).classList.toggle('open');
+}
+async function updateClientNotes(id, value){
+  const c = DATA.clients.find(x=>x.id===id);
+  if(c){ c.notes = value; await saveData(); }
+}
+async function addClientManual(){
+  const name = document.getElementById('new-client-name').value.trim();
+  const phone = document.getElementById('new-client-phone').value.trim();
+  if(!name){ alert('Indica al menos el nombre.'); return; }
+  DATA.clients.push({ id:'cli_'+Date.now(), name, phone, notes:'', createdAt:new Date().toISOString() });
+  await saveData();
+  document.getElementById('new-client-name').value='';
+  document.getElementById('new-client-phone').value='';
+  renderClients();
+}
+
+function escapeHtml(str){
+  const div = document.createElement('div');
+  div.textContent = str;
+  return div.innerHTML;
+}
+
+function renderAll(){
+  renderRequests();
+  renderCalendar();
+  renderClients();
+}
+
+loadData();
+</script>
+</body>
+</html>
