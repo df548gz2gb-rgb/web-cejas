@@ -129,13 +129,6 @@
   .stub p{font-size:14px;color:var(--pine-light);margin:0;}
   .stub .price{font-family:'IBM Plex Mono',monospace;font-size:13px;color:var(--rust);}
 
-  .stub-with-photo{padding:0;display:flex;flex-direction:column;overflow:hidden;}
-  .stub-with-photo::before{content:none;}
-  .stub-photo{width:100%;aspect-ratio:1/1;object-fit:cover;display:block;}
-  .stub-with-photo .stub-content{padding:20px 24px 24px;display:flex;flex-direction:column;flex:1;}
-  .stub-with-photo .stub-top{padding-bottom:18px;}
-  .stub-with-photo .stub-bottom{padding-top:16px;border-top:1.5px dashed var(--line);margin-top:auto;}
-
   /* ---------- GALLERY ---------- */
   .gallery-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;}
   .gpiece{aspect-ratio:3/4;border-radius:8px;background:var(--pine);position:relative;overflow:hidden;}
@@ -337,30 +330,24 @@
 
       <h3 class="services-subhead">Micropigmentación de cejas</h3>
       <div class="services-grid">
-        <div class="stub stub-with-photo">
-          <img class="stub-photo" src="images/galeria/efecto-polvo-1.jpg" alt="Resultado real de micropigmentación efecto polvo">
-          <div class="stub-content">
-            <div class="stub-top">
-              <h3>Efecto polvo</h3>
-              <p>Acabado difuminado tipo maquillaje en polvo. Sin retoque.</p>
-            </div>
-            <div class="stub-bottom">
-              <span class="price">1:30h</span>
-              <span class="price">90€</span>
-            </div>
+        <div class="stub">
+          <div class="stub-top">
+            <h3>Efecto polvo</h3>
+            <p>Acabado difuminado tipo maquillaje en polvo. Sin retoque.</p>
+          </div>
+          <div class="stub-bottom">
+            <span class="price">1:30h</span>
+            <span class="price">90€</span>
           </div>
         </div>
-        <div class="stub stub-with-photo">
-          <img class="stub-photo" src="images/galeria/efecto-hibrida-1.jpg" alt="Resultado real de micropigmentación híbrida">
-          <div class="stub-content">
-            <div class="stub-top">
-              <h3>Híbrida</h3>
-              <p>Pelo a pelo combinado con sombreado final. Sin retoque.</p>
-            </div>
-            <div class="stub-bottom">
-              <span class="price">2h</span>
-              <span class="price">95€</span>
-            </div>
+        <div class="stub">
+          <div class="stub-top">
+            <h3>Híbrida</h3>
+            <p>Pelo a pelo combinado con sombreado final. Sin retoque.</p>
+          </div>
+          <div class="stub-bottom">
+            <span class="price">2h</span>
+            <span class="price">95€</span>
           </div>
         </div>
         <div class="stub">
