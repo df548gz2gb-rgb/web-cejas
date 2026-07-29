@@ -689,7 +689,7 @@
   </div>
 </div>
 
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2" defer></script>
+<script src="vendor/supabase.js" defer></script>
 <script defer>
 /* ============================================================
    CONEXIÓN A SUPABASE (base de datos real) Y FORMSPREE (email)
@@ -700,13 +700,13 @@
 const SUPABASE_URL = 'https://rvqqhrxuyllvdvpuyncz.supabase.co';
 const SUPABASE_ANON_KEY = 'sb_publishable_a_mMMQG0S3nlrK6fGF11-w_RIY_baWB';
 const FORMSPREE_ENDPOINT = 'https://formspree.io/f/xaqrvrdy';
-let supabase = null;
+let sbClient = null;
 function ensureSupabase(){
-  if(!supabase){
+  if(!sbClient){
     if(!window.supabase) throw new Error('No se pudo conectar. Revisa tu conexión a internet e inténtalo de nuevo.');
-    supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    sbClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
   }
-  return supabase;
+  return sbClient;
 }
 
 let DATA = { requests: [], clients: [], appointments: [] };
