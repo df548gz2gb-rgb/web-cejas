@@ -635,6 +635,7 @@
       <button class="bs-tab active" id="tab-btn-solicitudes" onclick="showTab('solicitudes')">Solicitudes</button>
       <button class="bs-tab" id="tab-btn-calendario" onclick="showTab('calendario')">Calendario</button>
       <button class="bs-tab" id="tab-btn-clientes" onclick="showTab('clientes')">Clientes</button>
+      <button class="bs-tab" id="tab-btn-espera" onclick="showTab('espera')">Lista de espera</button>
     </div>
     <div class="bs-body">
 
@@ -682,6 +683,20 @@
         <div id="clients-list"></div>
       </div>
 
+      <div id="tab-espera" style="display:none;">
+        <p style="color:rgba(246,241,230,0.6);margin-bottom:18px;font-size:14px;">Personas a la espera de un hueco. Cuando tengas una cancelación, contáctalas desde aquí.</p>
+        <div class="card" style="margin-bottom:18px;">
+          <h3 style="font-size:15px;color:var(--cream);margin-bottom:12px;">Añadir a la lista de espera</h3>
+          <div style="display:flex;gap:10px;flex-wrap:wrap;">
+            <input type="text" id="new-wait-name" placeholder="Nombre" style="flex:1;min-width:160px;background:var(--ink);color:var(--cream);border-color:rgba(246,241,230,0.2);">
+            <input type="text" id="new-wait-phone" placeholder="Teléfono" style="flex:1;min-width:160px;background:var(--ink);color:var(--cream);border-color:rgba(246,241,230,0.2);">
+            <input type="text" id="new-wait-note" placeholder="Nota (ej. efecto polvo, prefiere mañanas)" style="flex:2;min-width:220px;background:var(--ink);color:var(--cream);border-color:rgba(246,241,230,0.2);">
+            <button class="btn btn-primary" onclick="addWaitlistEntry()">Añadir</button>
+          </div>
+        </div>
+        <div id="waitlist-list"></div>
+      </div>
+
     </div>
   </div>
 </div>
@@ -706,7 +721,7 @@ function ensureSupabase(){
   return sbClient;
 }
 
-let DATA = { requests: [], clients: [], appointments: [] };
+let DATA = { requests: [], clients: [], appointments: [], waitlist: [] };
 let survey = { tipo:null, primeraVez:null, franja:null };
 let calDate = new Date();
 let selectedDay = null;
@@ -732,6 +747,11 @@ async function loadClients(){
   const { data, error } = await ensureSupabase().from('clients').select('*').order('name');
   if(error){ console.error(error); return; }
   DATA.clients = data.map(c => ({ id: c.id, name: c.name, phone: c.phone||'', notes: c.notes||'', createdAt: c.created_at }));
+}
+async function loadWaitlist(){
+  const { data, error } = await ensureSupabase().from('waitlist').select('*').order('created_at');
+  if(error){ console.error(error); return; }
+  DATA.waitlist = data.map(w => ({ id: w.id, name: w.name, phone: w.phone||'', note: w.note||'', createdAt: w.created_at }));
 }
 
 /* ---------------- BOOKING MODAL ---------------- */
@@ -855,12 +875,13 @@ async function logoutBackstage(){
 
 /* ---------------- TABS ---------------- */
 function showTab(name){
-  ['solicitudes','calendario','clientes'].forEach(t=>{
+  ['solicitudes','calendario','clientes','espera'].forEach(t=>{
     document.getElementById('tab-'+t).style.display = (t===name)?'block':'none';
     document.getElementById('tab-btn-'+t).classList.toggle('active', t===name);
   });
   if(name==='calendario') renderCalendar();
   if(name==='clientes') renderClients();
+  if(name==='espera') renderWaitlist();
 }
 
 /* ---------------- SOLICITUDES ---------------- */
@@ -888,23 +909,22 @@ function renderRequests(){
       </div>
       ${r.status==='pendiente' ? `
       <div class="req-actions">
-        <a class="btn-mini confirm" href="${whatsappLink(r)}" target="_blank" rel="noopener" onclick="markContacted('${r.id}')">Contactar por WhatsApp</a>
+        <a class="btn-mini confirm" href="${whatsappLink(r.phone, `Hola ${r.name}! Soy Noemi, te escribo por tu solicitud de ${r.answers.tipo||'cita'}. ¿Qué días te vienen mejor?`)}" target="_blank" rel="noopener" onclick="markContacted('${r.id}')">Contactar por WhatsApp</a>
         <button class="btn-mini" onclick="discardRequest('${r.id}')">Descartar</button>
       </div>` : ''}
       ${r.status==='contactada' ? `
       <div class="req-actions">
-        <a class="btn-mini" href="${whatsappLink(r)}" target="_blank" rel="noopener">Abrir WhatsApp de nuevo</a>
+        <a class="btn-mini" href="${whatsappLink(r.phone, `Hola ${r.name}! Soy Noemi, te escribo por tu solicitud de ${r.answers.tipo||'cita'}. ¿Qué días te vienen mejor?`)}" target="_blank" rel="noopener">Abrir WhatsApp de nuevo</a>
         <button class="btn-mini" onclick="discardRequest('${r.id}')">Descartar</button>
       </div>` : ''}
     </div>
   `).join('');
 }
-function whatsappLink(r){
-  let digits = (r.phone||'').replace(/[^\d+]/g,'');
+function whatsappLink(phone, message){
+  let digits = (phone||'').replace(/[^\d+]/g,'');
   if(digits.startsWith('+')) digits = digits.slice(1);
   if(digits.length===9) digits = '34'+digits;
-  const msg = `Hola ${r.name}! Soy Noemi, te escribo por tu solicitud de ${r.answers.tipo||'cita'}. ¿Qué días te vienen mejor?`;
-  return `https://wa.me/${digits}?text=${encodeURIComponent(msg)}`;
+  return `https://wa.me/${digits}?text=${encodeURIComponent(message)}`;
 }
 async function discardRequest(id){
   const { error } = await ensureSupabase().rpc('rpc_discard_request', { p_id: id });
@@ -1035,6 +1055,50 @@ async function addClientManual(){
   renderClients();
 }
 
+/* ---------------- LISTA DE ESPERA ---------------- */
+function renderWaitlist(){
+  const list = document.getElementById('waitlist-list');
+  if(!list) return;
+  if(DATA.waitlist.length===0){
+    list.innerHTML = '<p style="color:rgba(246,241,230,0.5);font-size:14px;">No hay nadie en la lista de espera todavía.</p>';
+    return;
+  }
+  list.innerHTML = DATA.waitlist.map(w=>`
+    <div class="card req-card">
+      <div class="req-top">
+        <div>
+          <strong style="font-size:15px;">${w.name}</strong>
+          <div class="mono" style="font-size:12px;color:rgba(246,241,230,0.5);">${w.phone}</div>
+        </div>
+      </div>
+      ${w.note? `<div class="answers"><span>${escapeHtml(w.note)}</span></div>`:''}
+      <div class="req-actions">
+        <a class="btn-mini confirm" href="${whatsappLink(w.phone, `Hola ${w.name}! Soy Noemi, te escribo porque se me ha quedado un hueco libre. ¿Te viene bien?`)}" target="_blank" rel="noopener">Contactar por WhatsApp</a>
+        <button class="btn-mini" onclick="removeWaitlistEntry('${w.id}')">Quitar de la lista</button>
+      </div>
+    </div>
+  `).join('');
+}
+async function addWaitlistEntry(){
+  const name = document.getElementById('new-wait-name').value.trim();
+  const phone = document.getElementById('new-wait-phone').value.trim();
+  const note = document.getElementById('new-wait-note').value.trim();
+  if(!name){ alert('Indica al menos el nombre.'); return; }
+  const { error } = await ensureSupabase().rpc('rpc_add_waitlist', { p_name: name, p_phone: phone, p_note: note });
+  if(error){ alert('No se pudo añadir a la lista de espera.'); console.error(error); return; }
+  document.getElementById('new-wait-name').value='';
+  document.getElementById('new-wait-phone').value='';
+  document.getElementById('new-wait-note').value='';
+  await loadWaitlist();
+  renderWaitlist();
+}
+async function removeWaitlistEntry(id){
+  const { error } = await ensureSupabase().rpc('rpc_remove_waitlist', { p_id: id });
+  if(error){ alert('No se pudo quitar de la lista.'); console.error(error); return; }
+  await loadWaitlist();
+  renderWaitlist();
+}
+
 function escapeHtml(str){
   const div = document.createElement('div');
   div.textContent = str;
@@ -1042,10 +1106,11 @@ function escapeHtml(str){
 }
 
 async function renderAll(){
-  await Promise.all([loadRequests(), loadAppointments(), loadClients()]);
+  await Promise.all([loadRequests(), loadAppointments(), loadClients(), loadWaitlist()]);
   renderRequests();
   renderCalendar();
   renderClients();
+  renderWaitlist();
 }
 </script>
 </body>
