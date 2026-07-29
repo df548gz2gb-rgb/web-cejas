@@ -218,17 +218,13 @@
   .req-top{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;}
   .badge{font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:.06em;padding:4px 10px;border-radius:999px;}
   .badge.pendiente{background:rgba(188,154,84,0.2);color:var(--gold);}
+  .badge.contactada{background:rgba(124,139,114,0.25);color:#9CC49B;}
   .badge.confirmada{background:rgba(124,139,114,0.25);color:#9CC49B;}
   .badge.descartada{background:rgba(162,87,58,0.2);color:#D69A82;}
   .answers{margin-top:10px;font-size:13px;color:rgba(246,241,230,0.75);display:flex;flex-direction:column;gap:4px;}
-  .req-actions{display:flex;gap:8px;margin-top:14px;}
-  .btn-mini{border:1px solid rgba(246,241,230,0.3);background:none;color:var(--cream);padding:7px 14px;border-radius:999px;font-size:12px;}
+  .req-actions{display:flex;gap:8px;margin-top:14px;flex-wrap:wrap;}
+  .btn-mini{border:1px solid rgba(246,241,230,0.3);background:none;color:var(--cream);padding:7px 14px;border-radius:999px;font-size:12px;text-decoration:none;display:inline-block;}
   .btn-mini.confirm{background:var(--gold);color:var(--ink);border-color:var(--gold);}
-  .inline-form{display:none;margin-top:14px;gap:10px;flex-wrap:wrap;align-items:flex-end;}
-  .inline-form.open{display:flex;}
-  .inline-form .field{margin-bottom:0;min-width:140px;}
-  .inline-form label{color:rgba(246,241,230,0.6);}
-  .inline-form input{background:var(--ink);color:var(--cream);border-color:rgba(246,241,230,0.2);}
 
   .cal-wrap{display:grid;grid-template-columns:1.4fr 1fr;gap:24px;align-items:start;}
   .cal-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;}
@@ -891,19 +887,23 @@ function renderRequests(){
       </div>
       ${r.status==='pendiente' ? `
       <div class="req-actions">
-        <button class="btn-mini confirm" onclick="toggleInlineForm('${r.id}')">Confirmar cita</button>
+        <a class="btn-mini confirm" href="${whatsappLink(r)}" target="_blank" rel="noopener" onclick="markContacted('${r.id}')">Contactar por WhatsApp</a>
         <button class="btn-mini" onclick="discardRequest('${r.id}')">Descartar</button>
-      </div>
-      <div class="inline-form" id="form-${r.id}">
-        <div class="field"><label>Fecha</label><input type="date" id="date-${r.id}"></div>
-        <div class="field"><label>Hora</label><input type="time" id="time-${r.id}"></div>
-        <button class="btn-mini confirm" onclick="confirmRequest('${r.id}')">Guardar cita</button>
+      </div>` : ''}
+      ${r.status==='contactada' ? `
+      <div class="req-actions">
+        <a class="btn-mini" href="${whatsappLink(r)}" target="_blank" rel="noopener">Abrir WhatsApp de nuevo</a>
+        <button class="btn-mini" onclick="discardRequest('${r.id}')">Descartar</button>
       </div>` : ''}
     </div>
   `).join('');
 }
-function toggleInlineForm(id){
-  document.getElementById('form-'+id).classList.toggle('open');
+function whatsappLink(r){
+  let digits = (r.phone||'').replace(/[^\d+]/g,'');
+  if(digits.startsWith('+')) digits = digits.slice(1);
+  if(digits.length===9) digits = '34'+digits;
+  const msg = `Hola ${r.name}! Soy Noemi, te escribo por tu solicitud de ${r.answers.tipo||'cita'}. ¿Qué días te vienen mejor?`;
+  return `https://wa.me/${digits}?text=${encodeURIComponent(msg)}`;
 }
 async function discardRequest(id){
   const { error } = await ensureSupabase().rpc('rpc_discard_request', { p_id: id });
@@ -911,16 +911,11 @@ async function discardRequest(id){
   await loadRequests();
   renderRequests();
 }
-async function confirmRequest(id){
-  const date = document.getElementById('date-'+id).value;
-  const time = document.getElementById('time-'+id).value;
-  if(!date || !time){ alert('Indica fecha y hora.'); return; }
-
-  const { error } = await ensureSupabase().rpc('rpc_confirm_request', { p_id: id, p_date: date, p_time: time });
-  if(error){ alert('No se pudo confirmar la solicitud.'); console.error(error); return; }
-
-  await Promise.all([loadRequests(), loadAppointments(), loadClients()]);
-  renderRequests(); renderCalendar(); renderClients();
+async function markContacted(id){
+  const { error } = await ensureSupabase().rpc('rpc_mark_contacted', { p_id: id });
+  if(error){ console.error(error); return; }
+  await loadRequests();
+  renderRequests();
 }
 
 /* ---------------- CALENDARIO ---------------- */
