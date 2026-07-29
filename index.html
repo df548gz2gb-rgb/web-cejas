@@ -689,15 +689,25 @@
   </div>
 </div>
 
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2" defer></script>
+<script defer>
 /* ============================================================
    CONEXIÓN A SUPABASE (base de datos real) Y FORMSPREE (email)
+   La conexión se crea solo cuando hace falta (no al cargar la
+   página), para que el resto de botones funcionen siempre aunque
+   esta conexión tarde o falle.
 ============================================================ */
 const SUPABASE_URL = 'https://rvqqhrxuyllvdvpuyncz.supabase.co';
 const SUPABASE_ANON_KEY = 'sb_publishable_a_mMMQG0S3nlrK6fGF11-w_RIY_baWB';
 const FORMSPREE_ENDPOINT = 'https://formspree.io/f/xaqrvrdy';
-const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+let supabase = null;
+function ensureSupabase(){
+  if(!supabase){
+    if(!window.supabase) throw new Error('No se pudo conectar. Revisa tu conexión a internet e inténtalo de nuevo.');
+    supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+  }
+  return supabase;
+}
 
 let DATA = { requests: [], clients: [], appointments: [] };
 let survey = { tipo:null, primeraVez:null, franja:null };
@@ -705,7 +715,7 @@ let calDate = new Date();
 let selectedDay = null;
 
 async function loadRequests(){
-  const { data, error } = await supabase.from('requests').select('*').order('created_at', { ascending:false });
+  const { data, error } = await ensureSupabase().from('requests').select('*').order('created_at', { ascending:false });
   if(error){ console.error(error); return; }
   DATA.requests = data.map(r => ({
     id: r.id, name: r.name, phone: r.phone,
@@ -714,7 +724,7 @@ async function loadRequests(){
   }));
 }
 async function loadAppointments(){
-  const { data, error } = await supabase.from('appointments').select('*').order('date').order('time');
+  const { data, error } = await ensureSupabase().from('appointments').select('*').order('date').order('time');
   if(error){ console.error(error); return; }
   DATA.appointments = data.map(a => ({
     id: a.id, date: a.date, time: (a.time||'').slice(0,5),
@@ -722,7 +732,7 @@ async function loadAppointments(){
   }));
 }
 async function loadClients(){
-  const { data, error } = await supabase.from('clients').select('*').order('name');
+  const { data, error } = await ensureSupabase().from('clients').select('*').order('name');
   if(error){ console.error(error); return; }
   DATA.clients = data.map(c => ({ id: c.id, name: c.name, phone: c.phone||'', notes: c.notes||'', createdAt: c.created_at }));
 }
@@ -766,9 +776,14 @@ async function submitBooking(){
   if(!name || !phone){ alert('Por favor, completa nombre y teléfono.'); return; }
   const motivo = document.getElementById('motivo').value.trim();
   const submitBtn = document.querySelector('#step-contact .btn-primary');
+
+  let sb;
+  try{ sb = ensureSupabase(); }
+  catch(e){ alert(e.message); return; }
+
   submitBtn.disabled = true;
 
-  const { error } = await supabase.rpc('rpc_create_request', {
+  const { error } = await sb.rpc('rpc_create_request', {
     p_name: name, p_phone: phone,
     p_tipo: survey.tipo,
     p_primera_vez: survey.primeraVez,
@@ -804,7 +819,10 @@ async function submitBooking(){
 /* ---------------- BACKSTAGE: LOGIN ---------------- */
 async function openBackstage(){
   document.getElementById('backstage').classList.add('open');
-  const { data: { session } } = await supabase.auth.getSession();
+  let sb;
+  try{ sb = ensureSupabase(); }
+  catch(e){ alert(e.message); return; }
+  const { data: { session } } = await sb.auth.getSession();
   if(session){
     document.getElementById('bs-login').style.display='none';
     document.getElementById('bs-dashboard').style.display='block';
@@ -821,7 +839,10 @@ async function tryLogin(){
   const email = document.getElementById('bs-email').value.trim();
   const pw = document.getElementById('bs-password').value;
   document.getElementById('bs-login-error').style.display='none';
-  const { error } = await supabase.auth.signInWithPassword({ email, password: pw });
+  let sb;
+  try{ sb = ensureSupabase(); }
+  catch(e){ alert(e.message); return; }
+  const { error } = await sb.auth.signInWithPassword({ email, password: pw });
   if(error){
     document.getElementById('bs-login-error').style.display='block';
     return;
@@ -831,7 +852,7 @@ async function tryLogin(){
   await renderAll();
 }
 async function logoutBackstage(){
-  await supabase.auth.signOut();
+  try{ await ensureSupabase().auth.signOut(); }catch(e){ /* ya no hay conexión, no pasa nada */ }
   closeBackstage();
 }
 
@@ -885,7 +906,7 @@ function toggleInlineForm(id){
   document.getElementById('form-'+id).classList.toggle('open');
 }
 async function discardRequest(id){
-  const { error } = await supabase.rpc('rpc_discard_request', { p_id: id });
+  const { error } = await ensureSupabase().rpc('rpc_discard_request', { p_id: id });
   if(error){ alert('No se pudo descartar la solicitud.'); console.error(error); return; }
   await loadRequests();
   renderRequests();
@@ -895,7 +916,7 @@ async function confirmRequest(id){
   const time = document.getElementById('time-'+id).value;
   if(!date || !time){ alert('Indica fecha y hora.'); return; }
 
-  const { error } = await supabase.rpc('rpc_confirm_request', { p_id: id, p_date: date, p_time: time });
+  const { error } = await ensureSupabase().rpc('rpc_confirm_request', { p_id: id, p_date: date, p_time: time });
   if(error){ alert('No se pudo confirmar la solicitud.'); console.error(error); return; }
 
   await Promise.all([loadRequests(), loadAppointments(), loadClients()]);
@@ -952,7 +973,7 @@ async function addAppointment(){
   const time = document.getElementById('new-appt-time').value;
   const note = document.getElementById('new-appt-note').value.trim();
   if(!selectedDay || !name || !time){ alert('Completa nombre y hora.'); return; }
-  const { error } = await supabase.rpc('rpc_add_appointment', { p_date: selectedDay, p_time: time, p_client_name: name, p_note: note });
+  const { error } = await ensureSupabase().rpc('rpc_add_appointment', { p_date: selectedDay, p_time: time, p_client_name: name, p_note: note });
   if(error){ alert('No se pudo añadir la cita.'); console.error(error); return; }
   document.getElementById('new-appt-name').value='';
   document.getElementById('new-appt-time').value='';
@@ -990,14 +1011,14 @@ function toggleClient(id){
 async function updateClientNotes(id, value){
   const c = DATA.clients.find(x=>x.id===id);
   if(c) c.notes = value;
-  const { error } = await supabase.rpc('rpc_update_client_notes', { p_id: id, p_notes: value });
+  const { error } = await ensureSupabase().rpc('rpc_update_client_notes', { p_id: id, p_notes: value });
   if(error) console.error(error);
 }
 async function addClientManual(){
   const name = document.getElementById('new-client-name').value.trim();
   const phone = document.getElementById('new-client-phone').value.trim();
   if(!name){ alert('Indica al menos el nombre.'); return; }
-  const { error } = await supabase.rpc('rpc_add_client', { p_name: name, p_phone: phone });
+  const { error } = await ensureSupabase().rpc('rpc_add_client', { p_name: name, p_phone: phone });
   if(error){ alert('No se pudo añadir el cliente.'); console.error(error); return; }
   document.getElementById('new-client-name').value='';
   document.getElementById('new-client-phone').value='';
