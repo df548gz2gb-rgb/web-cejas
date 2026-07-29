@@ -657,7 +657,8 @@
             <h3 style="font-size:16px;color:var(--cream);margin-bottom:6px;" id="day-panel-title">Selecciona un día</h3>
             <div class="day-appts" id="day-appts"></div>
             <div class="add-appt-form" id="add-appt-form" style="display:none;">
-              <input type="text" id="new-appt-name" placeholder="Nombre de la clienta/cliente">
+              <input type="text" id="new-appt-name" list="clients-datalist" placeholder="Nombre de la clienta/cliente" oninput="fillAppointmentPhone()">
+              <datalist id="clients-datalist"></datalist>
               <input type="time" id="new-appt-time">
               <input type="text" id="new-appt-note" placeholder="Nota (opcional)">
               <button class="btn btn-primary" onclick="addAppointment()">Añadir al calendario</button>
@@ -963,22 +964,35 @@ function renderDayPanel(){
     </div>`).join('') : '<p style="color:rgba(246,241,230,0.4);font-size:13px;">Sin citas este día.</p>';
   document.getElementById('add-appt-form').style.display = selectedDay ? 'flex' : 'none';
 }
+let selectedApptPhone = '';
+function fillAppointmentPhone(){
+  const name = document.getElementById('new-appt-name').value.trim().toLowerCase();
+  const match = DATA.clients.find(c=>c.name.trim().toLowerCase()===name);
+  selectedApptPhone = match ? match.phone : '';
+}
+function renderClientsDatalist(){
+  const dl = document.getElementById('clients-datalist');
+  if(!dl) return;
+  dl.innerHTML = DATA.clients.map(c=>`<option value="${escapeHtml(c.name)}"></option>`).join('');
+}
 async function addAppointment(){
   const name = document.getElementById('new-appt-name').value.trim();
   const time = document.getElementById('new-appt-time').value;
   const note = document.getElementById('new-appt-note').value.trim();
   if(!selectedDay || !name || !time){ alert('Completa nombre y hora.'); return; }
-  const { error } = await ensureSupabase().rpc('rpc_add_appointment', { p_date: selectedDay, p_time: time, p_client_name: name, p_note: note });
+  const { error } = await ensureSupabase().rpc('rpc_add_appointment', { p_date: selectedDay, p_time: time, p_client_name: name, p_note: note, p_phone: selectedApptPhone || null });
   if(error){ alert('No se pudo añadir la cita.'); console.error(error); return; }
   document.getElementById('new-appt-name').value='';
   document.getElementById('new-appt-time').value='';
   document.getElementById('new-appt-note').value='';
+  selectedApptPhone = '';
   await loadAppointments();
   renderCalendar(); renderDayPanel();
 }
 
 /* ---------------- CLIENTES ---------------- */
 function renderClients(){
+  renderClientsDatalist();
   const list = document.getElementById('clients-list');
   if(!list) return;
   const q = (document.getElementById('client-search')?.value||'').toLowerCase();
