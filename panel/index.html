@@ -290,6 +290,24 @@ function escapeHtml(str){
   div.textContent = str;
   return div.innerHTML;
 }
+function formatDateEs(dateStr){
+  const [y,m,d] = dateStr.split('-');
+  const meses = ['enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre'];
+  return `${parseInt(d,10)} de ${meses[parseInt(m,10)-1]} de ${y}`;
+}
+function clientHistoryHtml(phone){
+  const appts = DATA.appointments.filter(a=>a.phone && a.phone===phone).sort((a,b)=>b.date.localeCompare(a.date));
+  if(appts.length===0) return '<p style="color:rgba(246,241,230,0.4);font-size:12px;margin:6px 0 0;">Todavía no hay citas registradas.</p>';
+  return appts.map(a=>{
+    const cat = CATEGORIES[a.category]||CATEGORIES.otro;
+    return `
+    <div style="display:flex;align-items:center;gap:8px;font-size:12px;padding:6px 0;border-bottom:1px solid rgba(246,241,230,0.08);">
+      <span class="appt-dot" style="background:${cat.color};width:7px;height:7px;flex-shrink:0;"></span>
+      <span style="flex:1;">${formatDateEs(a.date)} · ${cat.label}</span>
+      <span style="color:rgba(246,241,230,0.5);">${a.note?escapeHtml(a.note.slice(0,24)):''}</span>
+    </div>`;
+  }).join('');
+}
 function whatsappLink(phone, message){
   let digits = (phone||'').replace(/[^\d+]/g,'');
   if(digits.startsWith('+')) digits = digits.slice(1);
@@ -560,6 +578,8 @@ function renderClients(){
       <div class="client-detail" id="detail-${c.id}">
         <label style="color:rgba(246,241,230,0.6);font-size:11px;">Notas</label>
         <textarea onchange="updateClientNotes('${c.id}', this.value)" style="width:100%;min-height:60px;background:var(--ink);color:var(--cream);border:1px solid rgba(246,241,230,0.2);border-radius:8px;padding:8px;margin-top:6px;">${escapeHtml(c.notes||'')}</textarea>
+        <label style="color:rgba(246,241,230,0.6);font-size:11px;display:block;margin-top:12px;">Historial de citas</label>
+        ${clientHistoryHtml(c.phone)}
       </div>
     </div>
   `).join('');
