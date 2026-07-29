@@ -740,7 +740,8 @@ async function loadAppointments(){
   if(error){ console.error(error); return; }
   DATA.appointments = data.map(a => ({
     id: a.id, date: a.date, time: (a.time||'').slice(0,5),
-    clientName: a.client_name, phone: a.phone||'', note: a.note||'', requestId: a.request_id
+    clientName: a.client_name, phone: a.phone||'', note: a.note||'',
+    category: a.category||'otro', requestId: a.request_id
   }));
 }
 async function loadClients(){
@@ -1040,6 +1041,8 @@ function renderClients(){
       <div class="client-detail" id="detail-${c.id}">
         <label style="color:rgba(246,241,230,0.6);font-size:12px;">Notas</label>
         <textarea onchange="updateClientNotes('${c.id}', this.value)">${escapeHtml(c.notes||'')}</textarea>
+        <label style="color:rgba(246,241,230,0.6);font-size:12px;display:block;margin-top:14px;">Historial de citas</label>
+        ${clientHistoryHtml(c.phone)}
       </div>
     </div>
   `).join('');
@@ -1113,6 +1116,27 @@ function escapeHtml(str){
   const div = document.createElement('div');
   div.textContent = str;
   return div.innerHTML;
+}
+
+const CATEGORY_LABELS = {
+  polvo:'Efecto polvo', hibrida:'Híbrida', pelo_a_pelo:'Pelo a pelo',
+  neutralizacion:'Neutralización', retoque:'Retoque', removedor:'Removedor',
+  diseno:'Diseño de cejas', otro:'Otro'
+};
+function formatDateEs(dateStr){
+  const [y,m,d] = dateStr.split('-');
+  const meses = ['enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre'];
+  return `${parseInt(d,10)} de ${meses[parseInt(m,10)-1]} de ${y}`;
+}
+function clientHistoryHtml(phone){
+  const appts = DATA.appointments.filter(a=>a.phone && a.phone===phone).sort((a,b)=>b.date.localeCompare(a.date));
+  if(appts.length===0) return '<p style="color:rgba(246,241,230,0.4);font-size:12px;margin:6px 0 0;">Todavía no hay citas registradas.</p>';
+  return appts.map(a=>`
+    <div style="display:flex;justify-content:space-between;gap:10px;font-size:12px;padding:6px 0;border-bottom:1px solid rgba(246,241,230,0.08);">
+      <span>${formatDateEs(a.date)} · ${CATEGORY_LABELS[a.category]||'Otro'}</span>
+      <span style="color:rgba(246,241,230,0.5);">${a.note?escapeHtml(a.note.slice(0,30)):''}</span>
+    </div>
+  `).join('');
 }
 
 async function renderAll(){
