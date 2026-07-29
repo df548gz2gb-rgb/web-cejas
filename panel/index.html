@@ -1,0 +1,627 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, viewport-fit=cover">
+<title>Panel — Noemi Cuesta</title>
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="icon-192.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Panel Noemi">
+<meta name="theme-color" content="#2E2320">
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600&family=Jost:wght@300;400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap');
+  :root{
+    --ink:#2E2320; --pine:#7A4B45; --pine-light:#9C6B60;
+    --parchment:#F5EAE4; --rust:#8C3B4F; --rust-deep:#722F40;
+    --gold:#BD8A54; --cream:#FBF4EF; --line: rgba(246,241,230,0.14);
+  }
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+  html,body{margin:0;padding:0;height:100%;overscroll-behavior-y:none;}
+  body{
+    background:var(--ink);color:var(--cream);font-family:'Jost',sans-serif;
+    padding-top:env(safe-area-inset-top);padding-bottom:env(safe-area-inset-bottom);
+  }
+  h1,h2,h3{font-family:'Cormorant Garamond',serif;font-weight:600;margin:0;}
+  .mono{font-family:'IBM Plex Mono',monospace;}
+  button{font-family:inherit;cursor:pointer;}
+  input,textarea,select{font-family:inherit;}
+
+  /* ---------- LOGIN ---------- */
+  #login-screen{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px;}
+  .login-panel{background:var(--pine);padding:36px 28px;border-radius:16px;width:100%;max-width:360px;}
+  .login-panel h1{font-size:26px;color:var(--cream);margin-bottom:4px;}
+  .login-panel p.sub{font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--gold);margin:0 0 22px;}
+  .field{margin-bottom:14px;}
+  .field label{display:block;font-size:12px;color:rgba(246,241,230,0.65);margin-bottom:6px;}
+  input[type=text],input[type=tel],input[type=password],input[type=date],input[type=time],textarea,select{
+    width:100%;padding:12px 14px;border-radius:8px;border:1px solid rgba(246,241,230,0.2);
+    background:var(--ink);color:var(--cream);font-size:15px;
+  }
+  .btn{border:none;border-radius:999px;padding:13px 22px;font-size:14px;font-weight:500;width:100%;}
+  .btn-primary{background:var(--gold);color:var(--ink);}
+  .btn-secondary{background:rgba(246,241,230,0.1);color:var(--cream);}
+  .btn-danger{background:var(--rust-deep);color:var(--cream);}
+  .error-msg{color:#D69A82;font-size:13px;margin-top:12px;display:none;}
+
+  /* ---------- APP SHELL ---------- */
+  #app-screen{display:none;min-height:100vh;flex-direction:column;}
+  .topbar{
+    display:flex;justify-content:space-between;align-items:center;
+    padding:16px 18px;border-bottom:1px solid var(--line);
+  }
+  .topbar .logo{font-family:'Cormorant Garamond',serif;font-size:20px;}
+  .topbar .logo span{color:var(--gold);}
+  .icon-btn{background:none;border:none;color:rgba(246,241,230,0.6);font-size:13px;}
+  .tabs{display:flex;gap:4px;padding:10px 12px 0;overflow-x:auto;}
+  .tab{
+    background:none;border:none;color:rgba(246,241,230,0.55);padding:10px 14px;
+    border-radius:10px 10px 0 0;font-size:13px;white-space:nowrap;
+  }
+  .tab.active{background:rgba(246,241,230,0.07);color:var(--cream);}
+  .tab-body{flex:1;padding:16px;padding-bottom:100px;}
+  .card{background:rgba(246,241,230,0.05);border:1px solid var(--line);border-radius:12px;padding:16px;}
+
+  /* ---------- CALENDAR ---------- */
+  .cal-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;}
+  .cal-head h2{font-size:19px;}
+  .cal-nav{background:rgba(246,241,230,0.08);border:none;color:var(--cream);width:36px;height:36px;border-radius:50%;font-size:16px;}
+  .cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:4px;}
+  .cal-dow{font-family:'IBM Plex Mono',monospace;font-size:10px;color:rgba(246,241,230,0.4);text-align:center;padding-bottom:6px;}
+  .cal-cell{
+    aspect-ratio:1;border-radius:10px;background:rgba(246,241,230,0.04);
+    display:flex;flex-direction:column;align-items:center;justify-content:center;
+    font-size:14px;position:relative;gap:3px;
+  }
+  .cal-cell.empty{background:none;}
+  .cal-cell.today{box-shadow:inset 0 0 0 1.5px var(--gold);}
+  .cal-cell.selected{background:var(--gold);color:var(--ink);font-weight:600;}
+  .cal-dots{display:flex;gap:2px;}
+  .cal-dots i{width:5px;height:5px;border-radius:50%;display:block;}
+
+  .day-panel{margin-top:18px;}
+  .day-panel h3{font-size:16px;margin-bottom:10px;}
+  .appt-row{
+    display:flex;align-items:center;gap:10px;padding:12px;border-radius:10px;
+    background:rgba(246,241,230,0.05);margin-bottom:8px;
+  }
+  .appt-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0;}
+  .appt-info{flex:1;min-width:0;}
+  .appt-info .t{font-family:'IBM Plex Mono',monospace;font-size:12px;color:var(--gold);}
+  .appt-info .n{font-size:14px;}
+  .appt-info .note{font-size:12px;color:rgba(246,241,230,0.5);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+
+  .fab{
+    position:fixed;bottom:24px;right:20px;width:56px;height:56px;border-radius:50%;
+    background:var(--gold);color:var(--ink);border:none;font-size:26px;box-shadow:0 6px 18px rgba(0,0,0,0.35);
+    z-index:30;
+  }
+
+  /* ---------- MODAL ---------- */
+  .overlay{position:fixed;inset:0;background:rgba(0,0,0,0.55);display:none;align-items:flex-end;z-index:100;}
+  .overlay.open{display:flex;}
+  .sheet{
+    background:var(--pine);width:100%;max-height:88vh;overflow-y:auto;border-radius:20px 20px 0 0;
+    padding:22px 20px calc(24px + env(safe-area-inset-bottom));
+  }
+  .sheet h3{font-size:19px;margin-bottom:16px;}
+  .cat-picker{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:14px;}
+  .cat-opt{
+    display:flex;align-items:center;gap:6px;border:1.5px solid rgba(246,241,230,0.2);
+    border-radius:999px;padding:7px 12px;font-size:12px;background:none;color:var(--cream);
+  }
+  .cat-opt i{width:9px;height:9px;border-radius:50%;display:block;}
+  .cat-opt.selected{border-color:var(--cream);background:rgba(246,241,230,0.12);}
+  .sheet-actions{display:flex;gap:10px;margin-top:18px;}
+  .sheet-actions .btn{flex:1;}
+
+  /* ---------- SOLICITUDES / CLIENTES / ESPERA ---------- */
+  .req-card{margin-bottom:12px;}
+  .req-top{display:flex;justify-content:space-between;align-items:flex-start;gap:10px;}
+  .badge{font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:.05em;padding:4px 9px;border-radius:999px;}
+  .badge.pendiente{background:rgba(188,154,84,0.2);color:var(--gold);}
+  .badge.contactada{background:rgba(124,139,114,0.25);color:#9CC49B;}
+  .badge.descartada{background:rgba(162,87,58,0.2);color:#D69A82;}
+  .answers{margin-top:8px;font-size:13px;color:rgba(246,241,230,0.7);display:flex;flex-direction:column;gap:3px;}
+  .req-actions{display:flex;gap:8px;margin-top:12px;flex-wrap:wrap;}
+  .btn-mini{
+    border:1px solid rgba(246,241,230,0.3);background:none;color:var(--cream);
+    padding:8px 14px;border-radius:999px;font-size:12px;text-decoration:none;display:inline-block;
+  }
+  .btn-mini.confirm{background:var(--gold);color:var(--ink);border-color:var(--gold);}
+  .client-row{
+    display:flex;justify-content:space-between;align-items:center;padding:13px 14px;border-radius:10px;
+    background:rgba(246,241,230,0.05);margin-bottom:8px;
+  }
+  .client-detail{display:none;margin-top:8px;padding:12px 14px;background:rgba(246,241,230,0.04);border-radius:10px;font-size:13px;}
+  .client-detail.open{display:block;}
+  .empty-msg{color:rgba(246,241,230,0.45);font-size:13px;}
+</style>
+</head>
+<body>
+
+<div id="login-screen">
+  <div class="login-panel">
+    <p class="sub">Panel privado</p>
+    <h1>Hola, Noemi</h1>
+    <div class="field" style="margin-top:20px;">
+      <label>Email</label>
+      <input type="text" id="login-email" autocomplete="username">
+    </div>
+    <div class="field">
+      <label>Contraseña</label>
+      <input type="password" id="login-password" autocomplete="current-password">
+    </div>
+    <button class="btn btn-primary" onclick="tryLogin()">Entrar</button>
+    <p class="error-msg" id="login-error">Email o contraseña incorrectos.</p>
+  </div>
+</div>
+
+<div id="app-screen">
+  <div class="topbar">
+    <div class="logo">Panel <span>Noemi</span></div>
+    <button class="icon-btn" onclick="logout()">Cerrar sesión</button>
+  </div>
+  <div class="tabs">
+    <button class="tab active" id="tab-btn-calendario" onclick="showTab('calendario')">Calendario</button>
+    <button class="tab" id="tab-btn-solicitudes" onclick="showTab('solicitudes')">Solicitudes</button>
+    <button class="tab" id="tab-btn-clientes" onclick="showTab('clientes')">Clientes</button>
+    <button class="tab" id="tab-btn-espera" onclick="showTab('espera')">Espera</button>
+  </div>
+
+  <div class="tab-body">
+
+    <div id="tab-calendario">
+      <div class="cal-head">
+        <button class="cal-nav" onclick="changeMonth(-1)">‹</button>
+        <h2 id="cal-title"></h2>
+        <button class="cal-nav" onclick="changeMonth(1)">›</button>
+      </div>
+      <div class="cal-grid" id="cal-grid"></div>
+      <div class="day-panel">
+        <h3 id="day-panel-title">Selecciona un día</h3>
+        <div id="day-appts"></div>
+      </div>
+    </div>
+
+    <div id="tab-solicitudes" style="display:none;">
+      <div id="requests-list"></div>
+    </div>
+
+    <div id="tab-clientes" style="display:none;">
+      <input type="text" id="client-search" placeholder="Buscar cliente..." style="margin-bottom:14px;" oninput="renderClients()">
+      <div class="card" style="margin-bottom:16px;">
+        <h3 style="font-size:14px;margin-bottom:10px;">Añadir cliente</h3>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;">
+          <input type="text" id="new-client-name" placeholder="Nombre" style="flex:1;min-width:130px;">
+          <input type="text" id="new-client-phone" placeholder="Teléfono" style="flex:1;min-width:130px;">
+          <button class="btn btn-primary" style="width:auto;" onclick="addClientManual()">Añadir</button>
+        </div>
+      </div>
+      <div id="clients-list"></div>
+    </div>
+
+    <div id="tab-espera" style="display:none;">
+      <div class="card" style="margin-bottom:16px;">
+        <h3 style="font-size:14px;margin-bottom:10px;">Añadir a la lista de espera</h3>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;">
+          <input type="text" id="new-wait-name" placeholder="Nombre" style="flex:1;min-width:130px;">
+          <input type="text" id="new-wait-phone" placeholder="Teléfono" style="flex:1;min-width:130px;">
+          <input type="text" id="new-wait-note" placeholder="Nota" style="flex:2;min-width:160px;">
+          <button class="btn btn-primary" style="width:auto;" onclick="addWaitlistEntry()">Añadir</button>
+        </div>
+      </div>
+      <div id="waitlist-list"></div>
+    </div>
+
+  </div>
+
+  <button class="fab" id="fab-add" onclick="openApptSheet()">+</button>
+</div>
+
+<!-- ---- HOJA: AÑADIR / EDITAR CITA ---- -->
+<div class="overlay" id="appt-overlay">
+  <div class="sheet">
+    <h3 id="appt-sheet-title">Nueva cita</h3>
+    <div class="field">
+      <label>Día</label>
+      <input type="date" id="appt-date">
+    </div>
+    <div class="field">
+      <label>Hora</label>
+      <input type="time" id="appt-time">
+    </div>
+    <div class="field">
+      <label>Nombre</label>
+      <input type="text" id="appt-name" list="panel-clients-datalist" oninput="fillApptPhone()">
+      <datalist id="panel-clients-datalist"></datalist>
+    </div>
+    <div class="field">
+      <label>Nota</label>
+      <input type="text" id="appt-note" placeholder="Opcional">
+    </div>
+    <div class="field">
+      <label>Tipo (color)</label>
+      <div class="cat-picker" id="cat-picker"></div>
+    </div>
+    <div class="sheet-actions">
+      <button class="btn btn-secondary" onclick="closeApptSheet()">Cancelar</button>
+      <button class="btn btn-primary" onclick="saveAppt()">Guardar</button>
+    </div>
+    <div class="sheet-actions" id="appt-delete-row" style="display:none;">
+      <button class="btn btn-danger" onclick="deleteApptFromSheet()">Anular esta cita</button>
+    </div>
+  </div>
+</div>
+
+<script src="../vendor/supabase.js" defer></script>
+<script defer>
+const SUPABASE_URL = 'https://rvqqhrxuyllvdvpuyncz.supabase.co';
+const SUPABASE_ANON_KEY = 'sb_publishable_a_mMMQG0S3nlrK6fGF11-w_RIY_baWB';
+let sbClient = null;
+function ensureSupabase(){
+  if(!sbClient){
+    if(!window.supabase) throw new Error('No se pudo conectar. Revisa tu conexión a internet e inténtalo de nuevo.');
+    sbClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+  }
+  return sbClient;
+}
+
+const CATEGORIES = {
+  polvo:          { label: 'Efecto polvo',              color: '#BD8A54' },
+  hibrida:        { label: 'Híbrida',                   color: '#8C3B4F' },
+  pelo_a_pelo:    { label: 'Pelo a pelo',                color: '#C77B93' },
+  neutralizacion: { label: 'Neutralización',             color: '#4A7A8C' },
+  retoque:        { label: 'Retoque',                    color: '#5B8C6E' },
+  removedor:      { label: 'Removedor',                  color: '#7A5B8C' },
+  diseno:         { label: 'Diseño de cejas',            color: '#D9A441' },
+  otro:           { label: 'Otro',                       color: '#9C8C7A' }
+};
+
+let DATA = { requests: [], clients: [], appointments: [], waitlist: [] };
+let calDate = new Date();
+let selectedDay = null;
+let editingApptId = null;
+let selectedCategory = 'otro';
+
+function escapeHtml(str){
+  const div = document.createElement('div');
+  div.textContent = str;
+  return div.innerHTML;
+}
+function whatsappLink(phone, message){
+  let digits = (phone||'').replace(/[^\d+]/g,'');
+  if(digits.startsWith('+')) digits = digits.slice(1);
+  if(digits.length===9) digits = '34'+digits;
+  return `https://wa.me/${digits}?text=${encodeURIComponent(message)}`;
+}
+
+/* ---------------- LOGIN ---------------- */
+async function tryLogin(){
+  const email = document.getElementById('login-email').value.trim();
+  const pw = document.getElementById('login-password').value;
+  document.getElementById('login-error').style.display='none';
+  let sb;
+  try{ sb = ensureSupabase(); }
+  catch(e){ alert(e.message); return; }
+  const { error } = await sb.auth.signInWithPassword({ email, password: pw });
+  if(error){ document.getElementById('login-error').style.display='block'; return; }
+  await enterApp();
+}
+async function logout(){
+  try{ await ensureSupabase().auth.signOut(); }catch(e){}
+  document.getElementById('app-screen').style.display='none';
+  document.getElementById('login-screen').style.display='flex';
+}
+async function enterApp(){
+  document.getElementById('login-screen').style.display='none';
+  document.getElementById('app-screen').style.display='flex';
+  await renderAll();
+  renderCalendar();
+}
+window.addEventListener('DOMContentLoaded', async ()=>{
+  let sb;
+  try{ sb = ensureSupabase(); }catch(e){ return; }
+  const { data: { session } } = await sb.auth.getSession();
+  if(session) await enterApp();
+});
+
+/* ---------------- CARGA DE DATOS ---------------- */
+async function loadRequests(){
+  const { data, error } = await ensureSupabase().from('requests').select('*').order('created_at', { ascending:false });
+  if(error){ console.error(error); return; }
+  DATA.requests = data.map(r => ({
+    id: r.id, name: r.name, phone: r.phone,
+    answers: { tipo: r.tipo, primeraVez: r.primera_vez, franja: r.franja, motivo: r.motivo },
+    status: r.status, createdAt: r.created_at
+  }));
+}
+async function loadAppointments(){
+  const { data, error } = await ensureSupabase().from('appointments').select('*').order('date').order('time');
+  if(error){ console.error(error); return; }
+  DATA.appointments = data.map(a => ({
+    id: a.id, date: a.date, time: (a.time||'').slice(0,5),
+    clientName: a.client_name, phone: a.phone||'', note: a.note||'',
+    category: a.category||'otro', requestId: a.request_id
+  }));
+}
+async function loadClients(){
+  const { data, error } = await ensureSupabase().from('clients').select('*').order('name');
+  if(error){ console.error(error); return; }
+  DATA.clients = data.map(c => ({ id: c.id, name: c.name, phone: c.phone||'', notes: c.notes||'', createdAt: c.created_at }));
+}
+async function loadWaitlist(){
+  const { data, error } = await ensureSupabase().from('waitlist').select('*').order('created_at');
+  if(error){ console.error(error); return; }
+  DATA.waitlist = data.map(w => ({ id: w.id, name: w.name, phone: w.phone||'', note: w.note||'', createdAt: w.created_at }));
+}
+async function renderAll(){
+  await Promise.all([loadRequests(), loadAppointments(), loadClients(), loadWaitlist()]);
+  renderRequests(); renderClients(); renderWaitlist();
+}
+
+/* ---------------- TABS ---------------- */
+function showTab(name){
+  ['solicitudes','calendario','clientes','espera'].forEach(t=>{
+    document.getElementById('tab-'+t).style.display = (t===name)?'block':'none';
+    document.getElementById('tab-btn-'+t).classList.toggle('active', t===name);
+  });
+  document.getElementById('fab-add').style.display = (name==='calendario') ? 'block' : 'none';
+  if(name==='calendario') renderCalendar();
+}
+
+/* ---------------- CALENDARIO ---------------- */
+function renderCalendar(){
+  const grid = document.getElementById('cal-grid');
+  const title = document.getElementById('cal-title');
+  const year = calDate.getFullYear(), month = calDate.getMonth();
+  const monthNames = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
+  title.textContent = `${monthNames[month]} ${year}`;
+
+  const first = new Date(year, month, 1);
+  const startOffset = (first.getDay()+6)%7;
+  const daysInMonth = new Date(year, month+1, 0).getDate();
+  const todayStr = new Date().toISOString().slice(0,10);
+
+  let html = ['L','M','X','J','V','S','D'].map(d=>`<div class="cal-dow">${d}</div>`).join('');
+  for(let i=0;i<startOffset;i++) html += `<div class="cal-cell empty"></div>`;
+  for(let d=1; d<=daysInMonth; d++){
+    const dateStr = `${year}-${String(month+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+    const dayAppts = DATA.appointments.filter(a=>a.date===dateStr);
+    const cats = [...new Set(dayAppts.map(a=>a.category))].slice(0,3);
+    const dots = cats.map(c=>`<i style="background:${(CATEGORIES[c]||CATEGORIES.otro).color}"></i>`).join('');
+    const isToday = dateStr===todayStr;
+    const isSelected = dateStr===selectedDay;
+    html += `<div class="cal-cell ${isToday?'today':''} ${isSelected?'selected':''}" onclick="selectDay('${dateStr}')">${d}<div class="cal-dots">${dots}</div></div>`;
+  }
+  grid.innerHTML = html;
+  if(selectedDay) renderDayPanel();
+}
+function changeMonth(delta){ calDate.setMonth(calDate.getMonth()+delta); renderCalendar(); }
+function selectDay(dateStr){ selectedDay = dateStr; renderCalendar(); renderDayPanel(); }
+function renderDayPanel(){
+  document.getElementById('day-panel-title').textContent = selectedDay ? `Citas — ${selectedDay}` : 'Selecciona un día';
+  const box = document.getElementById('day-appts');
+  const appts = DATA.appointments.filter(a=>a.date===selectedDay).sort((a,b)=>a.time.localeCompare(b.time));
+  box.innerHTML = appts.length ? appts.map(a=>{
+    const cat = CATEGORIES[a.category]||CATEGORIES.otro;
+    return `
+    <div class="appt-row" onclick="openApptSheet('${a.id}')">
+      <div class="appt-dot" style="background:${cat.color}"></div>
+      <div class="appt-info">
+        <div class="t">${a.time}</div>
+        <div class="n">${escapeHtml(a.clientName)}</div>
+        <div class="note">${escapeHtml(cat.label)}${a.note?' · '+escapeHtml(a.note):''}</div>
+      </div>
+    </div>`;
+  }).join('') : '<p class="empty-msg">Sin citas este día.</p>';
+}
+
+/* ---------------- HOJA DE CITA (añadir/editar) ---------------- */
+function renderCatPicker(){
+  const picker = document.getElementById('cat-picker');
+  picker.innerHTML = Object.entries(CATEGORIES).map(([key,c])=>
+    `<button type="button" class="cat-opt ${key===selectedCategory?'selected':''}" data-cat="${key}" onclick="pickCategory('${key}')"><i style="background:${c.color}"></i>${c.label}</button>`
+  ).join('');
+}
+function pickCategory(key){
+  selectedCategory = key;
+  document.querySelectorAll('.cat-opt').forEach(el=>el.classList.toggle('selected', el.dataset.cat===key));
+}
+function fillApptPhone(){
+  const name = document.getElementById('appt-name').value.trim().toLowerCase();
+  const match = DATA.clients.find(c=>c.name.trim().toLowerCase()===name);
+  selectedApptPhone = match ? match.phone : '';
+}
+let selectedApptPhone = '';
+function renderApptDatalist(){
+  const dl = document.getElementById('panel-clients-datalist');
+  dl.innerHTML = DATA.clients.map(c=>`<option value="${escapeHtml(c.name)}"></option>`).join('');
+}
+function openApptSheet(id){
+  renderApptDatalist();
+  editingApptId = id || null;
+  if(id){
+    const a = DATA.appointments.find(x=>x.id===id);
+    document.getElementById('appt-sheet-title').textContent = 'Editar cita';
+    document.getElementById('appt-date').value = a.date;
+    document.getElementById('appt-time').value = a.time;
+    document.getElementById('appt-name').value = a.clientName;
+    document.getElementById('appt-note').value = a.note;
+    selectedCategory = a.category;
+    selectedApptPhone = a.phone;
+    document.getElementById('appt-delete-row').style.display = 'flex';
+  } else {
+    document.getElementById('appt-sheet-title').textContent = 'Nueva cita';
+    document.getElementById('appt-date').value = selectedDay || new Date().toISOString().slice(0,10);
+    document.getElementById('appt-time').value = '';
+    document.getElementById('appt-name').value = '';
+    document.getElementById('appt-note').value = '';
+    selectedCategory = 'otro';
+    selectedApptPhone = '';
+    document.getElementById('appt-delete-row').style.display = 'none';
+  }
+  renderCatPicker();
+  document.getElementById('appt-overlay').classList.add('open');
+}
+function closeApptSheet(){
+  document.getElementById('appt-overlay').classList.remove('open');
+  editingApptId = null;
+}
+async function saveAppt(){
+  const date = document.getElementById('appt-date').value;
+  const time = document.getElementById('appt-time').value;
+  const name = document.getElementById('appt-name').value.trim();
+  const note = document.getElementById('appt-note').value.trim();
+  if(!date || !time || !name){ alert('Completa día, hora y nombre.'); return; }
+  const sb = ensureSupabase();
+  let error;
+  if(editingApptId){
+    ({ error } = await sb.rpc('rpc_update_appointment', {
+      p_id: editingApptId, p_date: date, p_time: time, p_client_name: name, p_note: note, p_category: selectedCategory
+    }));
+  } else {
+    ({ error } = await sb.rpc('rpc_add_appointment', {
+      p_date: date, p_time: time, p_client_name: name, p_note: note, p_phone: selectedApptPhone || null, p_category: selectedCategory
+    }));
+  }
+  if(error){ alert('No se pudo guardar la cita.'); console.error(error); return; }
+  closeApptSheet();
+  await loadAppointments();
+  renderCalendar();
+}
+async function deleteApptFromSheet(){
+  if(!editingApptId) return;
+  if(!confirm('¿Anular esta cita?')) return;
+  const { error } = await ensureSupabase().rpc('rpc_remove_appointment', { p_id: editingApptId });
+  if(error){ alert('No se pudo anular la cita.'); console.error(error); return; }
+  closeApptSheet();
+  await loadAppointments();
+  renderCalendar();
+}
+
+/* ---------------- SOLICITUDES ---------------- */
+function renderRequests(){
+  const list = document.getElementById('requests-list');
+  if(DATA.requests.length===0){
+    list.innerHTML = '<p class="empty-msg">Todavía no hay solicitudes.</p>';
+    return;
+  }
+  list.innerHTML = DATA.requests.map(r=>`
+    <div class="card req-card">
+      <div class="req-top">
+        <div>
+          <strong style="font-size:14px;">${escapeHtml(r.name)}</strong>
+          <div class="mono" style="font-size:11px;color:rgba(246,241,230,0.5);">${r.phone}</div>
+        </div>
+        <span class="badge ${r.status}">${r.status}</span>
+      </div>
+      <div class="answers">
+        <span>Tipo: ${r.answers.tipo||'—'}</span>
+        <span>Primera vez: ${r.answers.primeraVez||'—'}</span>
+        <span>Franja: ${r.answers.franja||'—'}</span>
+        ${r.answers.motivo? `<span>Motivo: ${escapeHtml(r.answers.motivo)}</span>`:''}
+      </div>
+      ${(r.status==='pendiente'||r.status==='contactada') ? `
+      <div class="req-actions">
+        <a class="btn-mini confirm" href="${whatsappLink(r.phone, `Hola ${r.name}! Soy Noemi, te escribo por tu solicitud de ${r.answers.tipo||'cita'}. ¿Qué días te vienen mejor?`)}" target="_blank" rel="noopener" onclick="markContacted('${r.id}')">${r.status==='pendiente'?'Contactar por WhatsApp':'Abrir WhatsApp de nuevo'}</a>
+        <button class="btn-mini" onclick="discardRequest('${r.id}')">Descartar</button>
+      </div>` : ''}
+    </div>
+  `).join('');
+}
+async function markContacted(id){
+  const { error } = await ensureSupabase().rpc('rpc_mark_contacted', { p_id: id });
+  if(error){ console.error(error); return; }
+  await loadRequests(); renderRequests();
+}
+async function discardRequest(id){
+  const { error } = await ensureSupabase().rpc('rpc_discard_request', { p_id: id });
+  if(error){ alert('No se pudo descartar la solicitud.'); console.error(error); return; }
+  await loadRequests(); renderRequests();
+}
+
+/* ---------------- CLIENTES ---------------- */
+function renderClients(){
+  const list = document.getElementById('clients-list');
+  const q = (document.getElementById('client-search')?.value||'').toLowerCase();
+  const filtered = DATA.clients.filter(c=> c.name.toLowerCase().includes(q) || c.phone.includes(q));
+  if(filtered.length===0){
+    list.innerHTML = '<p class="empty-msg">No hay clientes todavía.</p>';
+    return;
+  }
+  list.innerHTML = filtered.map(c=>`
+    <div>
+      <div class="client-row" onclick="toggleClient('${c.id}')">
+        <div><strong>${escapeHtml(c.name)}</strong> <span class="mono" style="color:rgba(246,241,230,0.5);font-size:11px;">${c.phone}</span></div>
+        <span style="font-size:11px;color:rgba(246,241,230,0.4);">Ver ficha</span>
+      </div>
+      <div class="client-detail" id="detail-${c.id}">
+        <label style="color:rgba(246,241,230,0.6);font-size:11px;">Notas</label>
+        <textarea onchange="updateClientNotes('${c.id}', this.value)" style="width:100%;min-height:60px;background:var(--ink);color:var(--cream);border:1px solid rgba(246,241,230,0.2);border-radius:8px;padding:8px;margin-top:6px;">${escapeHtml(c.notes||'')}</textarea>
+      </div>
+    </div>
+  `).join('');
+}
+function toggleClient(id){ document.getElementById('detail-'+id).classList.toggle('open'); }
+async function updateClientNotes(id, value){
+  const c = DATA.clients.find(x=>x.id===id);
+  if(c) c.notes = value;
+  const { error } = await ensureSupabase().rpc('rpc_update_client_notes', { p_id: id, p_notes: value });
+  if(error) console.error(error);
+}
+async function addClientManual(){
+  const name = document.getElementById('new-client-name').value.trim();
+  const phone = document.getElementById('new-client-phone').value.trim();
+  if(!name){ alert('Indica al menos el nombre.'); return; }
+  const { error } = await ensureSupabase().rpc('rpc_add_client', { p_name: name, p_phone: phone });
+  if(error){ alert('No se pudo añadir el cliente.'); console.error(error); return; }
+  document.getElementById('new-client-name').value='';
+  document.getElementById('new-client-phone').value='';
+  await loadClients(); renderClients();
+}
+
+/* ---------------- LISTA DE ESPERA ---------------- */
+function renderWaitlist(){
+  const list = document.getElementById('waitlist-list');
+  if(DATA.waitlist.length===0){
+    list.innerHTML = '<p class="empty-msg">No hay nadie en la lista de espera.</p>';
+    return;
+  }
+  list.innerHTML = DATA.waitlist.map(w=>`
+    <div class="card req-card">
+      <div class="req-top">
+        <div>
+          <strong style="font-size:14px;">${escapeHtml(w.name)}</strong>
+          <div class="mono" style="font-size:11px;color:rgba(246,241,230,0.5);">${w.phone}</div>
+        </div>
+      </div>
+      ${w.note? `<div class="answers"><span>${escapeHtml(w.note)}</span></div>`:''}
+      <div class="req-actions">
+        <a class="btn-mini confirm" href="${whatsappLink(w.phone, `Hola ${w.name}! Soy Noemi, te escribo porque se me ha quedado un hueco libre. ¿Te viene bien?`)}" target="_blank" rel="noopener">Contactar por WhatsApp</a>
+        <button class="btn-mini" onclick="removeWaitlistEntry('${w.id}')">Quitar</button>
+      </div>
+    </div>
+  `).join('');
+}
+async function addWaitlistEntry(){
+  const name = document.getElementById('new-wait-name').value.trim();
+  const phone = document.getElementById('new-wait-phone').value.trim();
+  const note = document.getElementById('new-wait-note').value.trim();
+  if(!name){ alert('Indica al menos el nombre.'); return; }
+  const { error } = await ensureSupabase().rpc('rpc_add_waitlist', { p_name: name, p_phone: phone, p_note: note });
+  if(error){ alert('No se pudo añadir.'); console.error(error); return; }
+  document.getElementById('new-wait-name').value='';
+  document.getElementById('new-wait-phone').value='';
+  document.getElementById('new-wait-note').value='';
+  await loadWaitlist(); renderWaitlist();
+}
+async function removeWaitlistEntry(id){
+  const { error } = await ensureSupabase().rpc('rpc_remove_waitlist', { p_id: id });
+  if(error){ alert('No se pudo quitar.'); console.error(error); return; }
+  await loadWaitlist(); renderWaitlist();
+}
+</script>
+</body>
+</html>
