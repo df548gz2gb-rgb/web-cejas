@@ -980,9 +980,19 @@ function renderDayPanel(){
   box.innerHTML = appts.length ? appts.map(a=>`
     <div class="appt-row">
       <span>${a.time} · ${a.clientName}</span>
-      <span style="color:rgba(246,241,230,0.5);">${a.note?a.note.slice(0,24):''}</span>
+      <span style="display:flex;align-items:center;gap:8px;">
+        <span style="color:rgba(246,241,230,0.5);">${a.note?a.note.slice(0,24):''}</span>
+        <button class="btn-mini" onclick="removeAppointment('${a.id}')">Anular</button>
+      </span>
     </div>`).join('') : '<p style="color:rgba(246,241,230,0.4);font-size:13px;">Sin citas este día.</p>';
   document.getElementById('add-appt-form').style.display = selectedDay ? 'flex' : 'none';
+}
+async function removeAppointment(id){
+  if(!confirm('¿Anular esta cita?')) return;
+  const { error } = await ensureSupabase().rpc('rpc_remove_appointment', { p_id: id });
+  if(error){ alert('No se pudo anular la cita.'); console.error(error); return; }
+  await loadAppointments();
+  renderCalendar(); renderDayPanel();
 }
 let selectedApptPhone = '';
 function fillAppointmentPhone(){
