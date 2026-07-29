@@ -617,11 +617,15 @@
       <div class="eyebrow" style="margin-bottom:8px;">Acceso profesional</div>
       <h3 style="font-size:22px;color:var(--cream);margin-bottom:18px;">Entrar al backstage</h3>
       <div class="field">
-        <label style="color:rgba(246,241,230,0.6);">Clave de acceso</label>
-        <input type="text" id="bs-password" placeholder="••••••••">
+        <label style="color:rgba(246,241,230,0.6);">Email</label>
+        <input type="text" id="bs-email" placeholder="tu@email.com">
+      </div>
+      <div class="field">
+        <label style="color:rgba(246,241,230,0.6);">Contraseña</label>
+        <input type="password" id="bs-password" placeholder="••••••••">
       </div>
       <button class="btn btn-primary" style="width:100%;" onclick="tryLogin()">Entrar</button>
-      <p class="hint">Clave de demostración: demo123</p>
+      <p class="hint" id="bs-login-error" style="display:none;color:#D69A82;">Email o contraseña incorrectos.</p>
       <button class="btn-ghost" style="color:rgba(246,241,230,0.6);margin-top:14px;" onclick="closeBackstage()">← Volver a la web</button>
     </div>
   </div>
@@ -629,7 +633,7 @@
   <div id="bs-dashboard" style="display:none;">
     <div class="bs-topbar">
       <div class="logo" style="color:var(--cream);">Noemi <span style="color:var(--gold);">Cuesta</span> · backstage</div>
-      <button class="btn-ghost" style="color:rgba(246,241,230,0.6);" onclick="closeBackstage()">Salir al sitio público →</button>
+      <button class="btn-ghost" style="color:rgba(246,241,230,0.6);" onclick="logoutBackstage()">Salir al sitio público →</button>
     </div>
     <div class="bs-tabs">
       <button class="bs-tab active" id="tab-btn-solicitudes" onclick="showTab('solicitudes')">Solicitudes</button>
@@ -685,27 +689,42 @@
   </div>
 </div>
 
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
 /* ============================================================
-   ESTADO — en un producto real esto viviría en una base de datos
-   real (Supabase, Postgres, etc). Aquí usamos window.storage
-   para que el prototipo recuerde los datos entre visitas.
+   CONEXIÓN A SUPABASE (base de datos real) Y FORMSPREE (email)
 ============================================================ */
+const SUPABASE_URL = 'https://rvqqhrxuyllvdvpuyncz.supabase.co';
+const SUPABASE_ANON_KEY = 'sb_publishable_a_mMMQG0S3nlrK6fGF11-w_RIY_baWB';
+const FORMSPREE_ENDPOINT = 'https://formspree.io/f/xaqrvrdy';
+const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
 let DATA = { requests: [], clients: [], appointments: [] };
 let survey = { tipo:null, primeraVez:null, franja:null };
 let calDate = new Date();
 let selectedDay = null;
 
-async function loadData(){
-  try{
-    const res = await window.storage.get('raiz-data', false);
-    if(res && res.value){ DATA = JSON.parse(res.value); }
-  }catch(e){ /* no hay datos guardados aún */ }
-  renderAll();
+async function loadRequests(){
+  const { data, error } = await supabase.from('requests').select('*').order('created_at', { ascending:false });
+  if(error){ console.error(error); return; }
+  DATA.requests = data.map(r => ({
+    id: r.id, name: r.name, phone: r.phone,
+    answers: { tipo: r.tipo, primeraVez: r.primera_vez, franja: r.franja, motivo: r.motivo },
+    status: r.status, createdAt: r.created_at
+  }));
 }
-async function saveData(){
-  try{ await window.storage.set('raiz-data', JSON.stringify(DATA), false); }
-  catch(e){ console.error('Error guardando datos', e); }
+async function loadAppointments(){
+  const { data, error } = await supabase.from('appointments').select('*').order('date').order('time');
+  if(error){ console.error(error); return; }
+  DATA.appointments = data.map(a => ({
+    id: a.id, date: a.date, time: (a.time||'').slice(0,5),
+    clientName: a.client_name, phone: a.phone||'', note: a.note||'', requestId: a.request_id
+  }));
+}
+async function loadClients(){
+  const { data, error } = await supabase.from('clients').select('*').order('name');
+  if(error){ console.error(error); return; }
+  DATA.clients = data.map(c => ({ id: c.id, name: c.name, phone: c.phone||'', notes: c.notes||'', createdAt: c.created_at }));
 }
 
 /* ---------------- BOOKING MODAL ---------------- */
@@ -746,45 +765,74 @@ async function submitBooking(){
   const phone = document.getElementById('contact-phone').value.trim();
   if(!name || !phone){ alert('Por favor, completa nombre y teléfono.'); return; }
   const motivo = document.getElementById('motivo').value.trim();
-  const req = {
-    id: 'req_'+Date.now(),
-    name, phone,
-    answers: { ...survey, motivo },
-    status: 'pendiente',
-    createdAt: new Date().toISOString()
-  };
-  DATA.requests.unshift(req);
-  await saveData();
-  renderRequests();
+  const submitBtn = document.querySelector('#step-contact .btn-primary');
+  submitBtn.disabled = true;
+
+  const { error } = await supabase.rpc('rpc_create_request', {
+    p_name: name, p_phone: phone,
+    p_tipo: survey.tipo,
+    p_primera_vez: survey.primeraVez,
+    p_franja: survey.franja,
+    p_motivo: motivo
+  });
+
+  submitBtn.disabled = false;
+  if(error){
+    console.error(error);
+    alert('No se ha podido enviar la solicitud. Inténtalo de nuevo en unos minutos, o llama directamente.');
+    return;
+  }
+
+  // Aviso por email a la profesional (si falla, no bloquea la reserva)
+  fetch(FORMSPREE_ENDPOINT, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+    body: JSON.stringify({
+      Nombre: name, Teléfono: phone,
+      Tratamiento: survey.tipo || '—',
+      'Primera vez': survey.primeraVez || '—',
+      Franja: survey.franja || '—',
+      Motivo: motivo || '—'
+    })
+  }).catch(()=>{});
 
   document.getElementById('step-contact').style.display='none';
   document.getElementById('step-done').style.display='block';
   document.getElementById('done-name').textContent = name;
-
-  // Simulación del email que recibiría la profesional
-  console.log('%c[Simulación de email]', 'color:#A2573A;font-weight:bold;',
-    `Nueva solicitud de reserva\nNombre: ${name}\nTeléfono: ${phone}\nTipo: ${survey.tipo}\nPrimera vez: ${survey.primeraVez}\nFranja: ${survey.franja}\nMotivo: ${motivo}`);
 }
 
 /* ---------------- BACKSTAGE: LOGIN ---------------- */
-function openBackstage(){
+async function openBackstage(){
   document.getElementById('backstage').classList.add('open');
+  const { data: { session } } = await supabase.auth.getSession();
+  if(session){
+    document.getElementById('bs-login').style.display='none';
+    document.getElementById('bs-dashboard').style.display='block';
+    await renderAll();
+  }
 }
-function closeBackstage(){
+async function closeBackstage(){
   document.getElementById('backstage').classList.remove('open');
   document.getElementById('bs-login').style.display='flex';
   document.getElementById('bs-dashboard').style.display='none';
   document.getElementById('bs-password').value='';
 }
-function tryLogin(){
+async function tryLogin(){
+  const email = document.getElementById('bs-email').value.trim();
   const pw = document.getElementById('bs-password').value;
-  if(pw === 'demo123'){
-    document.getElementById('bs-login').style.display='none';
-    document.getElementById('bs-dashboard').style.display='block';
-    renderAll();
-  } else {
-    alert('Clave incorrecta (pista: demo123)');
+  document.getElementById('bs-login-error').style.display='none';
+  const { error } = await supabase.auth.signInWithPassword({ email, password: pw });
+  if(error){
+    document.getElementById('bs-login-error').style.display='block';
+    return;
   }
+  document.getElementById('bs-login').style.display='none';
+  document.getElementById('bs-dashboard').style.display='block';
+  await renderAll();
+}
+async function logoutBackstage(){
+  await supabase.auth.signOut();
+  closeBackstage();
 }
 
 /* ---------------- TABS ---------------- */
@@ -837,28 +885,20 @@ function toggleInlineForm(id){
   document.getElementById('form-'+id).classList.toggle('open');
 }
 async function discardRequest(id){
-  const r = DATA.requests.find(x=>x.id===id);
-  if(r) r.status='descartada';
-  await saveData();
+  const { error } = await supabase.rpc('rpc_discard_request', { p_id: id });
+  if(error){ alert('No se pudo descartar la solicitud.'); console.error(error); return; }
+  await loadRequests();
   renderRequests();
 }
 async function confirmRequest(id){
-  const r = DATA.requests.find(x=>x.id===id);
   const date = document.getElementById('date-'+id).value;
   const time = document.getElementById('time-'+id).value;
   if(!date || !time){ alert('Indica fecha y hora.'); return; }
-  r.status='confirmada';
-  DATA.appointments.push({
-    id:'appt_'+Date.now(), date, time, clientName:r.name, phone:r.phone,
-    note:r.answers.motivo||'', requestId:r.id
-  });
-  // añadir o actualizar cliente
-  let client = DATA.clients.find(c=>c.phone===r.phone);
-  if(!client){
-    client = { id:'cli_'+Date.now(), name:r.name, phone:r.phone, notes:r.answers.motivo||'', createdAt:new Date().toISOString() };
-    DATA.clients.push(client);
-  }
-  await saveData();
+
+  const { error } = await supabase.rpc('rpc_confirm_request', { p_id: id, p_date: date, p_time: time });
+  if(error){ alert('No se pudo confirmar la solicitud.'); console.error(error); return; }
+
+  await Promise.all([loadRequests(), loadAppointments(), loadClients()]);
   renderRequests(); renderCalendar(); renderClients();
 }
 
@@ -912,11 +952,12 @@ async function addAppointment(){
   const time = document.getElementById('new-appt-time').value;
   const note = document.getElementById('new-appt-note').value.trim();
   if(!selectedDay || !name || !time){ alert('Completa nombre y hora.'); return; }
-  DATA.appointments.push({ id:'appt_'+Date.now(), date:selectedDay, time, clientName:name, phone:'', note });
-  await saveData();
+  const { error } = await supabase.rpc('rpc_add_appointment', { p_date: selectedDay, p_time: time, p_client_name: name, p_note: note });
+  if(error){ alert('No se pudo añadir la cita.'); console.error(error); return; }
   document.getElementById('new-appt-name').value='';
   document.getElementById('new-appt-time').value='';
   document.getElementById('new-appt-note').value='';
+  await loadAppointments();
   renderCalendar(); renderDayPanel();
 }
 
@@ -948,16 +989,19 @@ function toggleClient(id){
 }
 async function updateClientNotes(id, value){
   const c = DATA.clients.find(x=>x.id===id);
-  if(c){ c.notes = value; await saveData(); }
+  if(c) c.notes = value;
+  const { error } = await supabase.rpc('rpc_update_client_notes', { p_id: id, p_notes: value });
+  if(error) console.error(error);
 }
 async function addClientManual(){
   const name = document.getElementById('new-client-name').value.trim();
   const phone = document.getElementById('new-client-phone').value.trim();
   if(!name){ alert('Indica al menos el nombre.'); return; }
-  DATA.clients.push({ id:'cli_'+Date.now(), name, phone, notes:'', createdAt:new Date().toISOString() });
-  await saveData();
+  const { error } = await supabase.rpc('rpc_add_client', { p_name: name, p_phone: phone });
+  if(error){ alert('No se pudo añadir el cliente.'); console.error(error); return; }
   document.getElementById('new-client-name').value='';
   document.getElementById('new-client-phone').value='';
+  await loadClients();
   renderClients();
 }
 
@@ -967,13 +1011,12 @@ function escapeHtml(str){
   return div.innerHTML;
 }
 
-function renderAll(){
+async function renderAll(){
+  await Promise.all([loadRequests(), loadAppointments(), loadClients()]);
   renderRequests();
   renderCalendar();
   renderClients();
 }
-
-loadData();
 </script>
 </body>
 </html>
