@@ -64,6 +64,9 @@
   .card{background:rgba(246,241,230,0.05);border:1px solid var(--line);border-radius:12px;padding:16px;}
 
   /* ---------- CALENDAR ---------- */
+  .cal-view-toggle{display:flex;gap:6px;margin-bottom:16px;}
+  .view-btn{background:rgba(246,241,230,0.06);border:1px solid rgba(246,241,230,0.15);color:rgba(246,241,230,0.6);padding:8px 18px;border-radius:999px;font-size:13px;}
+  .view-btn.active{background:var(--gold);color:var(--ink);border-color:var(--gold);}
   .cal-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;}
   .cal-head h2{font-size:19px;}
   .cal-nav{background:rgba(246,241,230,0.08);border:none;color:var(--cream);width:36px;height:36px;border-radius:50%;font-size:16px;}
@@ -91,6 +94,34 @@
   .appt-info .t{font-family:'IBM Plex Mono',monospace;font-size:12px;color:var(--gold);}
   .appt-info .n{font-size:14px;}
   .appt-info .note{font-size:12px;color:rgba(246,241,230,0.5);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+
+  .week-day-card{margin-bottom:16px;}
+  .week-day-head{
+    display:flex;justify-content:space-between;align-items:center;font-size:13px;font-weight:500;
+    color:rgba(246,241,230,0.7);padding:6px 2px;border-bottom:1px solid var(--line);margin-bottom:8px;
+    text-transform:capitalize;
+  }
+  .week-day-card.today .week-day-head{color:var(--gold);}
+  .week-add{color:var(--gold);font-size:17px;line-height:1;}
+
+  #day-view-title{cursor:pointer;text-transform:capitalize;}
+  .day-timeline-wrap{overflow-x:hidden;-webkit-overflow-scrolling:touch;}
+  .day-timeline{position:relative;border-top:1px solid var(--line);margin-left:52px;}
+  .day-hour-row{height:60px;border-bottom:1px solid var(--line);position:relative;}
+  .day-hour-label{
+    position:absolute;left:-52px;top:-8px;width:44px;text-align:right;
+    font-family:'IBM Plex Mono',monospace;font-size:10px;color:rgba(246,241,230,0.4);
+  }
+  .day-appt-block{
+    position:absolute;left:4px;right:4px;border-radius:8px;padding:5px 8px;overflow:hidden;
+    font-size:12px;color:var(--ink);cursor:pointer;box-shadow:0 2px 6px rgba(0,0,0,0.25);
+  }
+  .day-appt-block .t{font-family:'IBM Plex Mono',monospace;font-size:10px;opacity:0.8;}
+  .day-appt-block .n{font-weight:600;line-height:1.2;}
+  .day-now-line{position:absolute;left:0;right:0;height:2px;background:var(--rust-deep);z-index:5;}
+  .day-now-line::before{
+    content:"";position:absolute;left:-4px;top:-4px;width:10px;height:10px;border-radius:50%;background:var(--rust-deep);
+  }
 
   .fab{
     position:fixed;bottom:24px;right:20px;width:56px;height:56px;border-radius:50%;
@@ -173,15 +204,43 @@
   <div class="tab-body">
 
     <div id="tab-calendario">
-      <div class="cal-head">
-        <button class="cal-nav" onclick="changeMonth(-1)">‹</button>
-        <h2 id="cal-title"></h2>
-        <button class="cal-nav" onclick="changeMonth(1)">›</button>
+      <div class="cal-view-toggle">
+        <button class="view-btn active" id="view-btn-month" onclick="setCalView('month')">Mes</button>
+        <button class="view-btn" id="view-btn-week" onclick="setCalView('week')">Semana</button>
+        <button class="view-btn" id="view-btn-day" onclick="setCalView('day')">Día</button>
       </div>
-      <div class="cal-grid" id="cal-grid"></div>
-      <div class="day-panel">
-        <h3 id="day-panel-title">Selecciona un día</h3>
-        <div id="day-appts"></div>
+
+      <div id="cal-month-view">
+        <div class="cal-head">
+          <button class="cal-nav" onclick="changeMonth(-1)">‹</button>
+          <h2 id="cal-title"></h2>
+          <button class="cal-nav" onclick="changeMonth(1)">›</button>
+        </div>
+        <div class="cal-grid" id="cal-grid"></div>
+        <div class="day-panel">
+          <h3 id="day-panel-title">Selecciona un día</h3>
+          <div id="day-appts"></div>
+        </div>
+      </div>
+
+      <div id="cal-week-view" style="display:none;">
+        <div class="cal-head">
+          <button class="cal-nav" onclick="changeWeek(-1)">‹</button>
+          <h2 id="week-title"></h2>
+          <button class="cal-nav" onclick="changeWeek(1)">›</button>
+        </div>
+        <div id="week-list"></div>
+      </div>
+
+      <div id="cal-day-view" style="display:none;">
+        <div class="cal-head">
+          <button class="cal-nav" onclick="changeDay(-1)">‹</button>
+          <h2 id="day-view-title" onclick="goToday()"></h2>
+          <button class="cal-nav" onclick="changeDay(1)">›</button>
+        </div>
+        <div class="day-timeline-wrap">
+          <div class="day-timeline" id="day-timeline"></div>
+        </div>
       </div>
     </div>
 
@@ -208,6 +267,12 @@
         <div style="display:flex;gap:8px;flex-wrap:wrap;">
           <input type="text" id="new-wait-name" placeholder="Nombre" style="flex:1;min-width:130px;">
           <input type="text" id="new-wait-phone" placeholder="Teléfono" style="flex:1;min-width:130px;">
+          <select id="new-wait-franja" style="flex:1;min-width:130px;">
+            <option value="">Franja (opcional)</option>
+            <option value="Mañana">Mañana</option>
+            <option value="Tarde">Tarde</option>
+            <option value="Flexible">Flexible</option>
+          </select>
           <input type="text" id="new-wait-note" placeholder="Nota" style="flex:2;min-width:160px;">
           <button class="btn btn-primary" style="width:auto;" onclick="addWaitlistEntry()">Añadir</button>
         </div>
@@ -217,7 +282,7 @@
 
   </div>
 
-  <button class="fab" id="fab-add" onclick="openApptSheet()">+</button>
+  <button class="fab" id="fab-add" onclick="fabAdd()">+</button>
 </div>
 
 <!-- ---- HOJA: AÑADIR / EDITAR CITA ---- -->
@@ -280,6 +345,12 @@ const CATEGORIES = {
   otro:           { label: 'Otro',                       color: '#9C8C7A' }
 };
 
+const FRANJA_COLORS = { 'Mañana':'#E8B94A', 'Manana':'#E8B94A', 'Tarde':'#6E7FB0', 'Flexible':'#7FA66B' };
+function franjaBorder(franja){
+  const c = FRANJA_COLORS[franja];
+  return c ? `border-left:4px solid ${c};` : '';
+}
+
 let DATA = { requests: [], clients: [], appointments: [], waitlist: [] };
 let calDate = new Date();
 let selectedDay = null;
@@ -337,7 +408,7 @@ async function enterApp(){
   document.getElementById('login-screen').style.display='none';
   document.getElementById('app-screen').style.display='flex';
   await renderAll();
-  renderCalendar();
+  refreshCalendar();
 }
 window.addEventListener('DOMContentLoaded', async ()=>{
   let sb;
@@ -373,7 +444,7 @@ async function loadClients(){
 async function loadWaitlist(){
   const { data, error } = await ensureSupabase().from('waitlist').select('*').order('created_at');
   if(error){ console.error(error); return; }
-  DATA.waitlist = data.map(w => ({ id: w.id, name: w.name, phone: w.phone||'', note: w.note||'', createdAt: w.created_at }));
+  DATA.waitlist = data.map(w => ({ id: w.id, name: w.name, phone: w.phone||'', note: w.note||'', franja: w.franja||'', createdAt: w.created_at }));
 }
 async function renderAll(){
   await Promise.all([loadRequests(), loadAppointments(), loadClients(), loadWaitlist()]);
@@ -387,10 +458,133 @@ function showTab(name){
     document.getElementById('tab-btn-'+t).classList.toggle('active', t===name);
   });
   document.getElementById('fab-add').style.display = (name==='calendario') ? 'block' : 'none';
-  if(name==='calendario') renderCalendar();
+  if(name==='calendario') refreshCalendar();
 }
 
 /* ---------------- CALENDARIO ---------------- */
+let calViewMode = 'month';
+let weekAnchor = new Date();
+let dayAnchor = new Date();
+const DEFAULT_DURATION_MIN = {
+  polvo:90, hibrida:120, pelo_a_pelo:120, neutralizacion:120,
+  retoque:45, removedor:30, diseno:35, combo:90, otro:60
+};
+const DAY_START_HOUR = 8;
+const DAY_END_HOUR = 21;
+const HOUR_HEIGHT = 60;
+function toDateStr(d){
+  return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+}
+function setCalView(mode){
+  calViewMode = mode;
+  document.getElementById('view-btn-month').classList.toggle('active', mode==='month');
+  document.getElementById('view-btn-week').classList.toggle('active', mode==='week');
+  document.getElementById('view-btn-day').classList.toggle('active', mode==='day');
+  document.getElementById('cal-month-view').style.display = mode==='month' ? 'block' : 'none';
+  document.getElementById('cal-week-view').style.display = mode==='week' ? 'block' : 'none';
+  document.getElementById('cal-day-view').style.display = mode==='day' ? 'block' : 'none';
+  refreshCalendar();
+}
+function refreshCalendar(){
+  if(calViewMode==='week') renderWeek();
+  else if(calViewMode==='day') renderDay();
+  else renderCalendar();
+}
+function changeDay(delta){
+  dayAnchor.setDate(dayAnchor.getDate()+delta);
+  renderDay();
+}
+function goToday(){
+  dayAnchor = new Date();
+  renderDay();
+}
+function renderDay(){
+  const dateStr = toDateStr(dayAnchor);
+  const dowNames = ['domingo','lunes','martes','miércoles','jueves','viernes','sábado'];
+  const monthNames = ['enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre'];
+  document.getElementById('day-view-title').textContent = `${dowNames[dayAnchor.getDay()]} ${dayAnchor.getDate()} ${monthNames[dayAnchor.getMonth()]}`;
+
+  let rows = '';
+  for(let h=DAY_START_HOUR; h<=DAY_END_HOUR; h++){
+    rows += `<div class="day-hour-row"><span class="day-hour-label">${String(h).padStart(2,'0')}:00</span></div>`;
+  }
+  const appts = DATA.appointments.filter(a=>a.date===dateStr);
+  let blocks = appts.map(a=>{
+    const [hh,mm] = a.time.split(':').map(Number);
+    const startMin = (hh - DAY_START_HOUR)*60 + mm;
+    const dur = DEFAULT_DURATION_MIN[a.category] || 60;
+    const top = (startMin/60)*HOUR_HEIGHT;
+    const height = Math.max((dur/60)*HOUR_HEIGHT - 3, 26);
+    const cat = CATEGORIES[a.category]||CATEGORIES.otro;
+    return `<div class="day-appt-block" style="top:${top}px;height:${height}px;background:${cat.color};" onclick="openApptSheet('${a.id}')">
+      <div class="t">${a.time}</div>
+      <div class="n">${escapeHtml(a.clientName)}</div>
+    </div>`;
+  }).join('');
+
+  const todayStr = toDateStr(new Date());
+  if(dateStr===todayStr){
+    const now = new Date();
+    const nowMin = (now.getHours()-DAY_START_HOUR)*60 + now.getMinutes();
+    if(nowMin>=0 && nowMin<=(DAY_END_HOUR-DAY_START_HOUR)*60){
+      blocks += `<div class="day-now-line" style="top:${(nowMin/60)*HOUR_HEIGHT}px;"></div>`;
+    }
+  }
+
+  const timeline = document.getElementById('day-timeline');
+  timeline.innerHTML = rows + blocks;
+  timeline.style.height = ((DAY_END_HOUR-DAY_START_HOUR+1)*HOUR_HEIGHT)+'px';
+}
+function changeWeek(delta){
+  weekAnchor.setDate(weekAnchor.getDate() + delta*7);
+  renderWeek();
+}
+function renderWeek(){
+  const dow = (weekAnchor.getDay()+6)%7; // lunes=0
+  const start = new Date(weekAnchor);
+  start.setDate(weekAnchor.getDate()-dow);
+  const days = [];
+  for(let i=0;i<7;i++){
+    const d = new Date(start);
+    d.setDate(start.getDate()+i);
+    days.push(d);
+  }
+  const monthNames = ['enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre'];
+  const dowNames = ['Lunes','Martes','Miércoles','Jueves','Viernes','Sábado','Domingo'];
+  const end = days[6];
+  document.getElementById('week-title').textContent = start.getMonth()===end.getMonth()
+    ? `${start.getDate()}–${end.getDate()} ${monthNames[end.getMonth()]} ${end.getFullYear()}`
+    : `${start.getDate()} ${monthNames[start.getMonth()]} – ${end.getDate()} ${monthNames[end.getMonth()]} ${end.getFullYear()}`;
+
+  const todayStr = toDateStr(new Date());
+  document.getElementById('week-list').innerHTML = days.map((d,i)=>{
+    const dateStr = toDateStr(d);
+    const dayAppts = DATA.appointments.filter(a=>a.date===dateStr).sort((a,b)=>a.time.localeCompare(b.time));
+    const isToday = dateStr===todayStr;
+    return `
+    <div class="week-day-card ${isToday?'today':''}">
+      <div class="week-day-head">
+        <span>${dowNames[i]} ${d.getDate()}</span>
+        <span class="week-add" onclick="openApptSheetForDay('${dateStr}')">+</span>
+      </div>
+      ${dayAppts.length ? dayAppts.map(a=>{
+        const cat = CATEGORIES[a.category]||CATEGORIES.otro;
+        return `<div class="appt-row" onclick="openApptSheet('${a.id}')">
+          <div class="appt-dot" style="background:${cat.color}"></div>
+          <div class="appt-info">
+            <div class="t">${a.time}</div>
+            <div class="n">${escapeHtml(a.clientName)}</div>
+            <div class="note">${escapeHtml(cat.label)}${a.note?' · '+escapeHtml(a.note):''}</div>
+          </div>
+        </div>`;
+      }).join('') : '<p class="empty-msg" style="padding:0 2px 4px;">Sin citas.</p>'}
+    </div>`;
+  }).join('');
+}
+function openApptSheetForDay(dateStr){
+  selectedDay = dateStr;
+  openApptSheet();
+}
 function renderCalendar(){
   const grid = document.getElementById('cal-grid');
   const title = document.getElementById('cal-title');
@@ -458,6 +652,11 @@ function renderApptDatalist(){
   const dl = document.getElementById('panel-clients-datalist');
   dl.innerHTML = DATA.clients.map(c=>`<option value="${escapeHtml(c.name)}"></option>`).join('');
 }
+function fabAdd(){
+  if(calViewMode==='day') selectedDay = toDateStr(dayAnchor);
+  else if(calViewMode==='week') selectedDay = toDateStr(weekAnchor);
+  openApptSheet();
+}
 function openApptSheet(id){
   renderApptDatalist();
   editingApptId = id || null;
@@ -508,7 +707,7 @@ async function saveAppt(){
   if(error){ alert('No se pudo guardar la cita.'); console.error(error); return; }
   closeApptSheet();
   await loadAppointments();
-  renderCalendar();
+  refreshCalendar();
 }
 async function deleteApptFromSheet(){
   if(!editingApptId) return;
@@ -517,7 +716,7 @@ async function deleteApptFromSheet(){
   if(error){ alert('No se pudo anular la cita.'); console.error(error); return; }
   closeApptSheet();
   await loadAppointments();
-  renderCalendar();
+  refreshCalendar();
 }
 
 /* ---------------- SOLICITUDES ---------------- */
@@ -528,7 +727,7 @@ function renderRequests(){
     return;
   }
   list.innerHTML = DATA.requests.map(r=>`
-    <div class="card req-card">
+    <div class="card req-card" style="${franjaBorder(r.answers.franja)}">
       <div class="req-top">
         <div>
           <strong style="font-size:14px;">${escapeHtml(r.name)}</strong>
@@ -611,12 +810,13 @@ function renderWaitlist(){
     return;
   }
   list.innerHTML = DATA.waitlist.map(w=>`
-    <div class="card req-card">
+    <div class="card req-card" style="${franjaBorder(w.franja)}">
       <div class="req-top">
         <div>
           <strong style="font-size:14px;">${escapeHtml(w.name)}</strong>
           <div class="mono" style="font-size:11px;color:rgba(246,241,230,0.5);">${w.phone}</div>
         </div>
+        ${w.franja? `<span class="badge" style="background:rgba(246,241,230,0.1);color:rgba(246,241,230,0.7);">${w.franja}</span>`:''}
       </div>
       ${w.note? `<div class="answers"><span>${escapeHtml(w.note)}</span></div>`:''}
       <div class="req-actions">
@@ -630,12 +830,14 @@ async function addWaitlistEntry(){
   const name = document.getElementById('new-wait-name').value.trim();
   const phone = document.getElementById('new-wait-phone').value.trim();
   const note = document.getElementById('new-wait-note').value.trim();
+  const franja = document.getElementById('new-wait-franja').value;
   if(!name){ alert('Indica al menos el nombre.'); return; }
-  const { error } = await ensureSupabase().rpc('rpc_add_waitlist', { p_name: name, p_phone: phone, p_note: note });
+  const { error } = await ensureSupabase().rpc('rpc_add_waitlist', { p_name: name, p_phone: phone, p_note: note, p_franja: franja || null });
   if(error){ alert('No se pudo añadir.'); console.error(error); return; }
   document.getElementById('new-wait-name').value='';
   document.getElementById('new-wait-phone').value='';
   document.getElementById('new-wait-note').value='';
+  document.getElementById('new-wait-franja').value='';
   await loadWaitlist(); renderWaitlist();
 }
 async function removeWaitlistEntry(id){
