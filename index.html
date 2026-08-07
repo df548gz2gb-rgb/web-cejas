@@ -701,7 +701,13 @@
           <div style="display:flex;gap:10px;flex-wrap:wrap;">
             <input type="text" id="new-wait-name" placeholder="Nombre" style="flex:1;min-width:160px;background:var(--ink);color:var(--cream);border-color:rgba(246,241,230,0.2);">
             <input type="text" id="new-wait-phone" placeholder="Teléfono" style="flex:1;min-width:160px;background:var(--ink);color:var(--cream);border-color:rgba(246,241,230,0.2);">
-            <input type="text" id="new-wait-note" placeholder="Nota (ej. efecto polvo, prefiere mañanas)" style="flex:2;min-width:220px;background:var(--ink);color:var(--cream);border-color:rgba(246,241,230,0.2);">
+            <select id="new-wait-franja" style="flex:1;min-width:160px;background:var(--ink);color:var(--cream);border-color:rgba(246,241,230,0.2);">
+              <option value="">Franja (opcional)</option>
+              <option value="Mañana">Mañana</option>
+              <option value="Tarde">Tarde</option>
+              <option value="Flexible">Flexible</option>
+            </select>
+            <input type="text" id="new-wait-note" placeholder="Nota (ej. efecto polvo)" style="flex:2;min-width:220px;background:var(--ink);color:var(--cream);border-color:rgba(246,241,230,0.2);">
             <button class="btn btn-primary" onclick="addWaitlistEntry()">Añadir</button>
           </div>
         </div>
@@ -763,7 +769,7 @@ async function loadClients(){
 async function loadWaitlist(){
   const { data, error } = await ensureSupabase().from('waitlist').select('*').order('created_at');
   if(error){ console.error(error); return; }
-  DATA.waitlist = data.map(w => ({ id: w.id, name: w.name, phone: w.phone||'', note: w.note||'', createdAt: w.created_at }));
+  DATA.waitlist = data.map(w => ({ id: w.id, name: w.name, phone: w.phone||'', note: w.note||'', franja: w.franja||'', createdAt: w.created_at }));
 }
 
 /* ---------------- BOOKING MODAL ---------------- */
@@ -905,7 +911,7 @@ function renderRequests(){
     return;
   }
   list.innerHTML = DATA.requests.map(r=>`
-    <div class="card req-card">
+    <div class="card req-card" style="${franjaBorder(r.answers.franja)}">
       <div class="req-top">
         <div>
           <strong style="font-size:15px;">${r.name}</strong>
@@ -1088,12 +1094,13 @@ function renderWaitlist(){
     return;
   }
   list.innerHTML = DATA.waitlist.map(w=>`
-    <div class="card req-card">
+    <div class="card req-card" style="${franjaBorder(w.franja)}">
       <div class="req-top">
         <div>
           <strong style="font-size:15px;">${w.name}</strong>
           <div class="mono" style="font-size:12px;color:rgba(246,241,230,0.5);">${w.phone}</div>
         </div>
+        ${w.franja? `<span class="badge" style="background:rgba(246,241,230,0.1);color:rgba(246,241,230,0.7);">${w.franja}</span>`:''}
       </div>
       ${w.note? `<div class="answers"><span>${escapeHtml(w.note)}</span></div>`:''}
       <div class="req-actions">
@@ -1107,12 +1114,14 @@ async function addWaitlistEntry(){
   const name = document.getElementById('new-wait-name').value.trim();
   const phone = document.getElementById('new-wait-phone').value.trim();
   const note = document.getElementById('new-wait-note').value.trim();
+  const franja = document.getElementById('new-wait-franja').value;
   if(!name){ alert('Indica al menos el nombre.'); return; }
-  const { error } = await ensureSupabase().rpc('rpc_add_waitlist', { p_name: name, p_phone: phone, p_note: note });
+  const { error } = await ensureSupabase().rpc('rpc_add_waitlist', { p_name: name, p_phone: phone, p_note: note, p_franja: franja || null });
   if(error){ alert('No se pudo añadir a la lista de espera.'); console.error(error); return; }
   document.getElementById('new-wait-name').value='';
   document.getElementById('new-wait-phone').value='';
   document.getElementById('new-wait-note').value='';
+  document.getElementById('new-wait-franja').value='';
   await loadWaitlist();
   renderWaitlist();
 }
@@ -1134,6 +1143,11 @@ const CATEGORY_LABELS = {
   neutralizacion:'Neutralización', retoque:'Retoque', removedor:'Removedor',
   diseno:'Diseño de cejas', combo:'Combo amigas', otro:'Otro'
 };
+const FRANJA_COLORS = { 'Mañana':'#E8B94A', 'Manana':'#E8B94A', 'Tarde':'#6E7FB0', 'Flexible':'#7FA66B' };
+function franjaBorder(franja){
+  const c = FRANJA_COLORS[franja];
+  return c ? `border-left:4px solid ${c};` : '';
+}
 function formatDateEs(dateStr){
   const [y,m,d] = dateStr.split('-');
   const meses = ['enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre'];
