@@ -5,7 +5,7 @@ Sigue los pasos en orden. Cuando termines cada uno, avísame. Si algo no coincid
 **Ya hecho por mí (no tienes que tocarlo):**
 - `supabase/01_asistente_whatsapp.sql`: prepara la base de datos (tus franjas, días bloqueados, fichas y conversaciones).
 - `supabase/functions/whatsapp-bot/index.ts`: el asistente.
-- Panel: nueva pestaña **WhatsApp** (chats que atiendes tú, días bloqueados y horario) y, en cada ficha de clienta, el campo **"Micropigmentación hecha por ti"** con la fecha.
+- **Backstage de tu web** (y también el panel aparte): nueva pestaña **WhatsApp** (chats que atiendes tú, días bloqueados y horario) y, en cada ficha de clienta, el campo **"Micropigmentación hecha por ti"** con la fecha.
 
 Todo está probado con conversaciones simuladas: reservar, retoque de clienta tuya, otro centro, removedor, cambiar, cancelar, doble reserva del mismo hueco, avisos y silencio cuando respondes tú.
 
@@ -18,7 +18,7 @@ Todo está probado con conversaciones simuladas: reservar, retoque de clienta tu
 3. Abre el archivo `supabase/01_asistente_whatsapp.sql`, copia **todo** el contenido, pégalo y pulsa **Run**.
 4. Debe salir **"Success. No rows returned"**.
 5. **Seguridad (importante):** menú izquierdo → **Authentication** → **Sign In / Providers** (o *Settings*) → desactiva **"Allow new users to sign up"**. Así nadie más puede crearse una cuenta y entrar en tu panel.
-6. Abre tu panel en el iPhone, desliza para recargar y comprueba que aparece la pestaña **WhatsApp** con tu horario.
+6. Entra en el backstage de tu web ("Acceso profesional", abajo del todo) y comprueba que aparece la pestaña **WhatsApp** con tu horario.
 
 ## Paso 2. Completar datos (cuando puedas, poco a poco)
 
@@ -29,7 +29,7 @@ Todo está probado con conversaciones simuladas: reservar, retoque de clienta tu
   - `antelacion_horas` (12): horas mínimas para reservar, cambiar o cancelar por WhatsApp.
   - `dias_vista` (45): hasta cuántos días en adelante se ofrecen huecos.
   - `dias_reactivar` (7): si un chat que atendiste tú lleva estos días sin mensajes, el asistente vuelve a atenderlo.
-- **Vacaciones y festivos:** pestaña WhatsApp del panel → "Días sin citas".
+- **Vacaciones y festivos:** backstage → pestaña WhatsApp → "Días sin citas".
 
 ## Paso 3. Cuenta de Meta Business (15 minutos)
 
@@ -122,7 +122,7 @@ Desde tu WhatsApp personal, escribe al número del negocio y prueba todos los ca
 - [ ] Info y precios → escribe una pregunta ("¿cuánto dura el efecto polvo?")
 - [ ] Escribe "quiero hablar con Noemi"
 - [ ] Responde tú desde la app del negocio en un chat derivado → el asistente no vuelve a hablar en ese chat
-- [ ] En el panel → pestaña WhatsApp → "Devolver al asistente"
+- [ ] En el backstage → pestaña WhatsApp → "Devolver al asistente"
 
 Mientras dure la prueba, las clientas reales siguen como siempre: el asistente no les contesta.
 
