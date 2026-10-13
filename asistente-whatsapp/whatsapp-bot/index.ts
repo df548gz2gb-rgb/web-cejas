@@ -4,7 +4,7 @@
 //
 // Recibe los mensajes de WhatsApp, sigue el flujo con botones y
 // reserva, cambia o cancela usando tus "Reservas online" (mismos
-// huecos, servicios, señal y reglas que la página /reservas/).
+// huecos, servicios y reglas que la página /reservas/, pero sin señal).
 // Los casos que debe ver Noemi se le pasan con un aviso a su
 // WhatsApp personal y aparecen en Gestión → WhatsApp.
 //
@@ -302,9 +302,7 @@ async function pedirConfirmacion(c: Conv) {
   if (c.datos.mover_token) {
     body = `Te confirmo el cambio:\n\n✨ ${c.datos.servicio_nombre}\n📅 ${fechaLarga(f)}\n🕐 ${h} h\n\n¿Cambio tu cita a este día y hora?`;
   } else {
-    const info = await infoReservas();
-    body = `Te confirmo los datos:\n\n✨ ${c.datos.servicio_nombre}\n📅 ${fechaLarga(f)}\n🕐 ${h} h\n💶 ${euros(c.datos.precio)}\n👤 ${c.datos.nombre}\n\n` +
-      `Para confirmar la cita se paga una *señal de ${euros(info.deposito_importe)}* en los 15 minutos siguientes a la reserva.\n\n¿Reservo la cita?`;
+    body = `Te confirmo los datos:\n\n✨ ${c.datos.servicio_nombre}\n📅 ${fechaLarga(f)}\n🕐 ${h} h\n💶 ${euros(c.datos.precio)}\n👤 ${c.datos.nombre}\n\n¿Reservo la cita?`;
   }
   await botones(c.telefono, body, [
     { id: "ok:reservar", title: c.datos.mover_token ? "Sí, cambiarla" : "Sí, reservar" },
@@ -331,21 +329,28 @@ async function confirmarReserva(c: Conv) {
     return;
   }
 
-  const { data, error } = await db.rpc("rpc_create_booking", {
-    p_telefono: "+" + c.telefono, p_nombre: c.datos.nombre, p_email: null,
+  // Reserva sin señal: queda confirmada al momento.
+  const { data, error } = await db.rpc("bot_reservar", {
+    p_telefono: "+" + c.telefono, p_nombre: c.datos.nombre,
     p_service_id: c.datos.servicio_id, p_tipo_cita: c.datos.tipo, p_slot_id: c.datos.slot_id,
-    p_notas: "Reservada por WhatsApp",
   });
   if (error) return errorReserva(c, error, f, h);
   const r = Array.isArray(data) ? data[0] : data;
-  const enlace = `${web}/reservas/index.html?token=${r.management_token}`;
-  const body = `¡Hueco reservado! ✨\n\n📅 ${fechaLarga(f)} a las ${h} h\n✨ ${c.datos.servicio_nombre}` +
+
+  // Mismo SMS/email de confirmación que cuando Noemi crea una cita en Gestión
+  db.functions.invoke("notify-appointment", { body: { appointment_id: r.appointment_id } })
+    .then(({ error: e }) => { if (e) console.error("notify-appointment", e); }, (e) => console.error("notify-appointment", e));
+
+  // Enlace al consentimiento informado (el mismo que genera la web de reservas)
+  let consentimiento = "";
+  const cons = await db.rpc("rpc_get_or_create_consent_for_booking", { p_token: r.management_token });
+  if (!cons.error && cons.data) consentimiento = `${web}/consentimiento/?id=${cons.data}`;
+
+  const body = `¡Cita reservada! ✨\n\n📅 ${fechaLarga(f)} a las ${h} h\n✨ ${c.datos.servicio_nombre}` +
     (aj.direccion ? `\n📍 ${aj.direccion}` : "") +
-    `\n\n⏳ *Para confirmarla, paga la señal de ${euros(r.deposito_importe)} en los próximos 15 minutos.* Si no, el hueco se libera.` +
-    `\n\n👉 Pagar la señal y firmar el consentimiento:\n${enlace}` +
-    (r.bizum_telefono ? `\n\nTambién puedes hacer un Bizum de ${euros(r.deposito_importe)} al *${r.bizum_telefono}*. ${r.bizum_instrucciones || ""}` : "") +
-    `\n\nPara ver, cambiar o cancelar tu cita: ${web}/reservas/gestionar.html?token=${r.management_token}`;
-  await texto(c.telefono, body); anotar(c, "a", "[cita reservada, enlace de pago enviado]");
+    (consentimiento ? `\n\n📝 Antes de la cita, rellena el consentimiento aquí:\n${consentimiento}` : "") +
+    "\n\nSi necesitas cambiarla o cancelarla, escríbeme por aquí. ¡Hasta pronto! 😊";
+  await texto(c.telefono, body); anotar(c, "a", "[cita reservada]");
   c.estado = "fin"; c.datos = { nombre: c.datos.nombre };
 }
 
@@ -435,7 +440,7 @@ Noemi Cuesta: micropigmentación y estética en Valencia. Formada con una profes
 Servicios y precios actuales:
 ${precios}
 
-Reservas: para confirmar una cita online se paga una señal de ${euros(info.deposito_importe)} (tarjeta o Bizum) en los 15 minutos siguientes a reservar. Se puede cancelar o cambiar hasta ${info.cancelacion_limite_horas} horas antes; si se cancela con menos antelación, la señal no se devuelve.
+Reservas por WhatsApp: no hace falta pagar señal. Se puede cancelar o cambiar hasta ${info.cancelacion_limite_horas} horas antes; con menos antelación lo gestiona Noemi personalmente.
 Los retoques solo se reservan directamente si la micropigmentación la hizo Noemi. Micropigmentaciones antiguas, de otro centro, removedor y neutralización: Noemi los valora personalmente con fotos.
 ${aj.direccion ? "Dirección: " + aj.direccion : "Dirección: Valencia (Noemi la facilita al confirmar la cita)."}
 ${aj.info_extra ? "Más información: " + aj.info_extra : ""}`;
@@ -501,8 +506,7 @@ async function procesarBoton(c: Conv, id: string) {
       if (valor === "cambiar") return cambiarOCancelar(c);
       if (valor === "info") {
         c.estado = "info";
-        const info = await infoReservas();
-        await texto(c.telefono, `*Servicios y precios*\n${await textoPrecios()}\n\nPara confirmar una cita se paga una señal de ${euros(info.deposito_importe)}.`);
+        await texto(c.telefono, `*Servicios y precios*\n${await textoPrecios()}`);
         const body = "¿Tienes alguna duda? Escríbemela y te respondo 😊";
         await botones(c.telefono, body, [
           { id: "menu:reservar", title: "Reservar una cita" },
@@ -583,11 +587,11 @@ async function procesarBoton(c: Conv, id: string) {
       const ci = await buscarCita(c, valor);
       if (!ci) return cambiarOCancelar(c);
       const info = await infoReservas();
-      const fueraPlazo = horasHasta(ci.fecha, ci.hora) < info.cancelacion_limite_horas;
+      if (horasHasta(ci.fecha, ci.hora) < info.cancelacion_limite_horas) {
+        return derivar(c, "Como queda muy poco para tu cita, Noemi te escribirá personalmente 😊", `Quiere cancelar con poca antelación: ${describirCita(ci)}`);
+      }
       c.estado = "confirmar_cancelacion";
-      const aviso = fueraPlazo && ci.pago_estado === "Confirmado"
-        ? `\n\n⚠️ Como faltan menos de ${info.cancelacion_limite_horas} horas, la señal no se devuelve.` : "";
-      const body = `¿Seguro que quieres cancelar tu cita de *${describirCita(ci)}*?${aviso}`;
+      const body = `¿Seguro que quieres cancelar tu cita de *${describirCita(ci)}*?`;
       await botones(c.telefono, body, [
         { id: "ccanok:" + ci.id, title: "Sí, cancelarla" },
         { id: "menu:inicio", title: "No, mantenerla" },

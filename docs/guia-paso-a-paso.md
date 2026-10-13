@@ -10,15 +10,17 @@ El asistente **no tiene agenda propia**. Usa exactamente lo mismo que tu página
 
 - **Huecos:** los de *Gestión → Reservas online*. Tus franjas de lunes, miércoles y sábado se configuran ahí, como ya haces.
 - **Servicios y precios:** los de *Gestión → Servicios y precios* que estén marcados como reservables online.
-- **Señal:** igual que en la web. La clienta recibe el enlace para pagar con tarjeta o las instrucciones del Bizum, y tiene 15 minutos. Si no paga, el hueco se libera solo.
+- **Sin señal:** las citas por WhatsApp quedan confirmadas al momento, sin pagar nada. En Reservas online aparecen como reserva online con pago «No requerido» y la nota «Reservada por WhatsApp (sin señal)». Tu web de reservas las respeta igual que una cita pagada.
+- **SMS de confirmación:** la clienta recibe el mismo SMS/email que cuando creas tú una cita en Gestión (función `notify-appointment`), y por WhatsApp el enlace al consentimiento.
 - **Retoques:** solo se reservan directamente si la clienta tiene una micropigmentación **cobrada** en tu Gestión. Si no, se te pasa a ti.
-- **Cambios y cancelaciones:** con las mismas reglas y el mismo plazo de cancelación que la web. Quedan en el historial de la cita. Las citas que pusiste tú a mano te las pasa a ti.
+- **Cambios y cancelaciones:** dentro de tu plazo de cancelación. Si queda menos tiempo, te lo pasa a ti. Quedan en el historial de la cita. Las citas que pusiste tú a mano también te las pasa a ti.
 - **Una sola reserva activa por clienta**, como en la web.
 - **Agenda online cerrada:** el asistente no reserva y te pasa el chat.
 
 ## Lo que ya está hecho (no tienes que tocarlo)
 
-- `asistente-whatsapp/01_base_de_datos.sql`: añade a tu base de datos de Gestión lo que necesita el asistente, sin tocar nada de lo que ya tienes.
+- `asistente-whatsapp/01_base_de_datos.sql`: añade a tu base de datos de Gestión lo que necesita el asistente. También actualiza tres funciones de tus reservas online (`hueco_ocupado`, `rpc_check_client` y `rpc_create_booking`) para que las citas sin señal cuenten como confirmadas.
+  - De paso corrige un fallo que encontré: si alguien tenía la página de reservas abierta desde antes y reservaba un hueco donde tú ya habías puesto una cita a mano, tu cita se anulaba sola como «expirada». Ahora ya no puede pasar.
 - `asistente-whatsapp/whatsapp-bot/index.ts`: el asistente.
 - `asistente-whatsapp/gestion/`: el apartado nuevo **💬 WhatsApp** del menú de Gestión. Muestra los chats que atiendes tú, con «Abrir chat» y «Devolver al asistente», y los ajustes del asistente (dirección del estudio e información extra).
 
@@ -128,7 +130,7 @@ https://rxvdluocgnymaytczwid.supabase.co/functions/v1/whatsapp-bot?key=TU_WEBHOO
 Comprueba que la **agenda online está abierta** en Reservas online y prueba:
 
 - [ ] Saludo → botones
-- [ ] Reservar → Micropigmentación → primera vez → técnica → hueco → nombre → confirmar. Te llega el enlace de pago y la cita sale en Reservas online.
+- [ ] Reservar → Micropigmentación → primera vez → técnica → hueco → nombre → confirmar. Llega el SMS de confirmación y la cita sale en Reservas online como «No requerido».
 - [ ] Micropigmentación → "Sí, tengo" → pide fotos y te llega el aviso
 - [ ] Retoque → otro centro → fotos y aviso
 - [ ] Removedor → aviso
@@ -158,4 +160,4 @@ Supabase → Edge Functions → Secrets → **borra `MODO_PRUEBA`**.
    - (a) Netlify está conectado a un repositorio de GitHub. ¿Cuál? No es `web-cejas` ni `web`.
    - (b) Arrastras la carpeta en netlify.com.
    - (c) No lo sabes. Entonces mándame una captura de netlify.com → tu sitio → *Site configuration* → *Build & deploy*.
-2. **El SMS al reservar:** ¿qué servicio lo envía? Así compruebo que también salga con las reservas por WhatsApp.
+2. **Señal en la web:** tu página `/reservas/` sigue pidiendo señal. ¿Quieres quitarla también allí, o solo en WhatsApp?
