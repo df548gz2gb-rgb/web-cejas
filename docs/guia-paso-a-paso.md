@@ -1,3 +1,5 @@
+> **Actualizado:** el código definitivo está en el repositorio `df548gz2gb-rgb/web`, rama `claude/micropigmentacion-app-hb936n` (la que publica Netlify). El manual con los pasos y el SQL listo para copiar es la página privada «Asistente de WhatsApp» en claude.ai: https://claude.ai/artifact/7RemmKMqnH8Rg6mJbwhokB
+
 # Guía paso a paso: asistente de WhatsApp
 
 > **Importante:** el asistente va conectado a tu web de **Gestión** (webnoemi.netlify.app/gestion) y a su base de datos. No toca la web antigua de este repositorio.
