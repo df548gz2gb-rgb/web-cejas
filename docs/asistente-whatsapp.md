@@ -11,6 +11,8 @@
 > - Recordatorios a clientas: se mantiene lo actual (SMS al reservar y recordatorios manuales). Los recordatorios automáticos por WhatsApp quedan como extra opcional.
 > - Combo amigas: se deriva a Noemi para organizar las dos citas.
 >
+> - **Cambio importante:** el asistente se conecta a la web de **Gestión** (webnoemi.netlify.app/gestion) y a su base de datos, y reutiliza sus *Reservas online*: huecos, servicios, señal, cancelaciones y verificación de retoques. No crea una agenda aparte. Lo de las secciones 1, 3.3, 3.4, 6 y 7 sobre la web de este repositorio queda superado.
+>
 > Los pasos para ponerlo en marcha están en **[guia-paso-a-paso.md](guia-paso-a-paso.md)**.
 
 ---

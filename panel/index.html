@@ -168,9 +168,6 @@
   .client-detail{display:none;margin-top:8px;padding:12px 14px;background:rgba(246,241,230,0.04);border-radius:10px;font-size:13px;}
   .client-detail.open{display:block;}
   .empty-msg{color:rgba(246,241,230,0.45);font-size:13px;}
-  #wa-count:not(:empty){background:var(--rust-deep);color:var(--cream);border-radius:999px;font-size:10px;padding:1px 6px;margin-left:5px;}
-  .micro-row{display:flex;gap:8px;flex-wrap:wrap;margin-top:6px;}
-  .micro-row select,.micro-row input{flex:1;min-width:130px;padding:9px 10px;font-size:13px;}
 </style>
 </head>
 <body>
@@ -202,7 +199,6 @@
     <button class="tab" id="tab-btn-solicitudes" onclick="showTab('solicitudes')">Solicitudes</button>
     <button class="tab" id="tab-btn-clientes" onclick="showTab('clientes')">Clientes</button>
     <button class="tab" id="tab-btn-espera" onclick="showTab('espera')">Espera</button>
-    <button class="tab" id="tab-btn-whatsapp" onclick="showTab('whatsapp')">WhatsApp<span id="wa-count"></span></button>
   </div>
 
   <div class="tab-body">
@@ -284,29 +280,6 @@
       <div id="waitlist-list"></div>
     </div>
 
-    <div id="tab-whatsapp" style="display:none;">
-      <h3 style="font-size:16px;margin-bottom:6px;">Chats que atiendes tú</h3>
-      <p class="empty-msg" style="margin:0 0 12px;">El asistente no contesta en estos chats. Cuando termines, pulsa «Devolver al asistente».</p>
-      <div id="wa-list"></div>
-
-      <h3 style="font-size:16px;margin:26px 0 6px;">Días sin citas</h3>
-      <p class="empty-msg" style="margin:0 0 12px;">Vacaciones, festivos o ratos en los que no puedes atender. El asistente no ofrecerá esas horas.</p>
-      <div class="card" style="margin-bottom:12px;">
-        <div style="display:flex;gap:8px;flex-wrap:wrap;">
-          <input type="date" id="new-block-date" style="flex:1;min-width:140px;">
-          <input type="time" id="new-block-from" title="Desde (opcional)" style="flex:1;min-width:100px;">
-          <input type="time" id="new-block-to" title="Hasta (opcional)" style="flex:1;min-width:100px;">
-          <input type="text" id="new-block-note" placeholder="Nota (opcional)" style="flex:2;min-width:140px;">
-          <button class="btn btn-primary" style="width:auto;" onclick="addBloqueo()">Bloquear</button>
-        </div>
-        <p class="empty-msg" style="margin:8px 0 0;">Sin horas = el día entero.</p>
-      </div>
-      <div id="block-list"></div>
-
-      <h3 style="font-size:16px;margin:26px 0 6px;">Horario que ofrece el asistente</h3>
-      <div id="slots-list" class="card"></div>
-    </div>
-
   </div>
 
   <button class="fab" id="fab-add" onclick="fabAdd()">+</button>
@@ -378,7 +351,7 @@ function franjaBorder(franja){
   return c ? `border-left:4px solid ${c};` : '';
 }
 
-let DATA = { requests: [], clients: [], appointments: [], waitlist: [], wa: [], bloqueos: [], franjas: [] };
+let DATA = { requests: [], clients: [], appointments: [], waitlist: [] };
 let calDate = new Date();
 let selectedDay = null;
 let editingApptId = null;
@@ -466,33 +439,21 @@ async function loadAppointments(){
 async function loadClients(){
   const { data, error } = await ensureSupabase().from('clients').select('*').order('name');
   if(error){ console.error(error); return; }
-  DATA.clients = data.map(c => ({ id: c.id, name: c.name, phone: c.phone||'', notes: c.notes||'', createdAt: c.created_at,
-    microConmigo: c.micro_conmigo ?? null, fechaUltimaMicro: c.fecha_ultima_micro || '' }));
+  DATA.clients = data.map(c => ({ id: c.id, name: c.name, phone: c.phone||'', notes: c.notes||'', createdAt: c.created_at }));
 }
 async function loadWaitlist(){
   const { data, error } = await ensureSupabase().from('waitlist').select('*').order('created_at');
   if(error){ console.error(error); return; }
   DATA.waitlist = data.map(w => ({ id: w.id, name: w.name, phone: w.phone||'', note: w.note||'', franja: w.franja||'', createdAt: w.created_at }));
 }
-async function loadWhatsapp(){
-  const sb = ensureSupabase();
-  const [c, b, f] = await Promise.all([
-    sb.from('wa_conversaciones').select('telefono,nombre_perfil,motivo_derivacion,derivada_at,ultimo_mensaje_at').eq('atendida_por_noemi', true).order('ultimo_mensaje_at', { ascending:false }),
-    sb.from('agenda_bloqueos').select('*').gte('fecha', toDateStr(new Date())).order('fecha'),
-    sb.from('agenda_franjas').select('*').eq('activa', true).order('dia_semana').order('hora_inicio')
-  ]);
-  // Si todavía no se ha preparado la base de datos del asistente, la pestaña queda vacía.
-  if(c.error || b.error || f.error){ console.warn('Asistente de WhatsApp no configurado todavía', c.error||b.error||f.error); return; }
-  DATA.wa = c.data; DATA.bloqueos = b.data; DATA.franjas = f.data;
-}
 async function renderAll(){
-  await Promise.all([loadRequests(), loadAppointments(), loadClients(), loadWaitlist(), loadWhatsapp()]);
-  renderRequests(); renderClients(); renderWaitlist(); renderWhatsapp();
+  await Promise.all([loadRequests(), loadAppointments(), loadClients(), loadWaitlist()]);
+  renderRequests(); renderClients(); renderWaitlist();
 }
 
 /* ---------------- TABS ---------------- */
 function showTab(name){
-  ['solicitudes','calendario','clientes','espera','whatsapp'].forEach(t=>{
+  ['solicitudes','calendario','clientes','espera'].forEach(t=>{
     document.getElementById('tab-'+t).style.display = (t===name)?'block':'none';
     document.getElementById('tab-btn-'+t).classList.toggle('active', t===name);
   });
@@ -817,15 +778,6 @@ function renderClients(){
       <div class="client-detail" id="detail-${c.id}">
         <label style="color:rgba(246,241,230,0.6);font-size:11px;">Notas</label>
         <textarea onchange="updateClientNotes('${c.id}', this.value)" style="width:100%;min-height:60px;background:var(--ink);color:var(--cream);border:1px solid rgba(246,241,230,0.2);border-radius:8px;padding:8px;margin-top:6px;">${escapeHtml(c.notes||'')}</textarea>
-        <label style="color:rgba(246,241,230,0.6);font-size:11px;display:block;margin-top:12px;">Micropigmentación hecha por ti (para el asistente de WhatsApp)</label>
-        <div class="micro-row">
-          <select onchange="updateClientMicro('${c.id}', this.value, document.getElementById('micro-date-${c.id}').value)">
-            <option value="" ${c.microConmigo===null?'selected':''}>Sin verificar</option>
-            <option value="si" ${c.microConmigo===true?'selected':''}>Sí, es clienta mía</option>
-            <option value="no" ${c.microConmigo===false?'selected':''}>No</option>
-          </select>
-          <input type="date" id="micro-date-${c.id}" value="${c.fechaUltimaMicro}" title="Fecha de la última micro" onchange="updateClientMicro('${c.id}', this.previousElementSibling.value, this.value)">
-        </div>
         <label style="color:rgba(246,241,230,0.6);font-size:11px;display:block;margin-top:12px;">Historial de citas</label>
         ${clientHistoryHtml(c.phone)}
       </div>
@@ -848,89 +800,6 @@ async function addClientManual(){
   document.getElementById('new-client-name').value='';
   document.getElementById('new-client-phone').value='';
   await loadClients(); renderClients();
-}
-
-async function updateClientMicro(id, value, fecha){
-  const micro = value==='si' ? true : value==='no' ? false : null;
-  const { error } = await ensureSupabase().rpc('rpc_update_client_micro', { p_id: id, p_micro: micro, p_fecha: fecha || null });
-  if(error){ alert('No se pudo guardar.'); console.error(error); return; }
-  const c = DATA.clients.find(x=>x.id===id);
-  if(c){ c.microConmigo = micro; c.fechaUltimaMicro = fecha || ''; }
-}
-
-/* ---------------- WHATSAPP ---------------- */
-const DIAS_SEMANA = ['','Lunes','Martes','Miércoles','Jueves','Viernes','Sábado','Domingo'];
-function formatDateTimeEs(iso){
-  if(!iso) return '';
-  const d = new Date(iso);
-  return d.toLocaleString('es-ES', { day:'numeric', month:'short', hour:'2-digit', minute:'2-digit' });
-}
-function renderWhatsapp(){
-  const count = document.getElementById('wa-count');
-  if(count) count.textContent = DATA.wa.length ? DATA.wa.length : '';
-  const list = document.getElementById('wa-list');
-  if(!list) return;
-  list.innerHTML = DATA.wa.length ? DATA.wa.map(w=>{
-    const nombre = clientNameByPhone(w.telefono) || w.nombre_perfil || 'Sin nombre';
-    return `
-    <div class="card req-card">
-      <div class="req-top">
-        <div>
-          <strong style="font-size:14px;">${escapeHtml(nombre)}</strong>
-          <div class="mono" style="font-size:11px;color:rgba(246,241,230,0.5);">+${escapeHtml(w.telefono)}</div>
-        </div>
-        <span style="font-size:11px;color:rgba(246,241,230,0.5);">${formatDateTimeEs(w.ultimo_mensaje_at)}</span>
-      </div>
-      <div class="answers"><span>${escapeHtml(w.motivo_derivacion||'Atendida por ti')}</span></div>
-      <div class="req-actions">
-        <a class="btn-mini confirm" href="https://wa.me/${encodeURIComponent(w.telefono)}" target="_blank" rel="noopener">Abrir chat</a>
-        <button class="btn-mini" onclick="setWaAtendida('${escapeHtml(w.telefono)}', false)">Devolver al asistente</button>
-      </div>
-    </div>`;}).join('') : '<p class="empty-msg">No hay chats pendientes. 🎉</p>';
-
-  document.getElementById('block-list').innerHTML = DATA.bloqueos.length ? DATA.bloqueos.map(b=>`
-    <div class="appt-row">
-      <div class="appt-info">
-        <div class="n">${formatDateEs(b.fecha)}</div>
-        <div class="note">${b.hora_inicio ? `${b.hora_inicio.slice(0,5)} – ${(b.hora_fin||'23:59').slice(0,5)}` : 'Todo el día'}${b.nota ? ' · '+escapeHtml(b.nota) : ''}</div>
-      </div>
-      <button class="btn-mini" onclick="removeBloqueo(${b.id})">Quitar</button>
-    </div>`).join('') : '<p class="empty-msg">No hay días bloqueados.</p>';
-
-  const porDia = {};
-  DATA.franjas.forEach(f=>{ (porDia[f.dia_semana] = porDia[f.dia_semana] || []).push(f); });
-  document.getElementById('slots-list').innerHTML = Object.keys(porDia).length ? Object.keys(porDia).map(d=>`
-    <div style="font-size:13px;margin-bottom:8px;">
-      <strong>${DIAS_SEMANA[d]}</strong><br>
-      <span style="color:rgba(246,241,230,0.7);">${porDia[d].map(f=>`${f.hora_inicio.slice(0,5)}–${f.hora_fin.slice(0,5)} ${f.tipo==='micro'?'micro':'retoque/removedor'}`).join(' · ')}</span>
-    </div>`).join('') : '<p class="empty-msg" style="margin:0;">Todavía no está configurado.</p>';
-}
-function clientNameByPhone(tel){
-  const digits = p => { let d=(p||'').replace(/\D/g,''); if(d.length===9) d='34'+d; if(d.startsWith('00')) d=d.slice(2); return d; };
-  const c = DATA.clients.find(x=>digits(x.phone)===tel);
-  return c ? c.name : null;
-}
-async function setWaAtendida(tel, atendida){
-  const { error } = await ensureSupabase().rpc('rpc_wa_set_atendida', { p_telefono: tel, p_atendida: atendida });
-  if(error){ alert('No se pudo actualizar.'); console.error(error); return; }
-  await loadWhatsapp(); renderWhatsapp();
-}
-async function addBloqueo(){
-  const fecha = document.getElementById('new-block-date').value;
-  const desde = document.getElementById('new-block-from').value;
-  const hasta = document.getElementById('new-block-to').value;
-  const nota = document.getElementById('new-block-note').value.trim();
-  if(!fecha){ alert('Elige el día.'); return; }
-  if((desde && !hasta) || (!desde && hasta)){ alert('Pon las dos horas (desde y hasta) o ninguna para bloquear el día entero.'); return; }
-  const { error } = await ensureSupabase().rpc('rpc_add_bloqueo', { p_fecha: fecha, p_hora_inicio: desde || null, p_hora_fin: hasta || null, p_nota: nota || null });
-  if(error){ alert('No se pudo bloquear.'); console.error(error); return; }
-  ['new-block-date','new-block-from','new-block-to','new-block-note'].forEach(id=>document.getElementById(id).value='');
-  await loadWhatsapp(); renderWhatsapp();
-}
-async function removeBloqueo(id){
-  const { error } = await ensureSupabase().rpc('rpc_remove_bloqueo', { p_id: id });
-  if(error){ alert('No se pudo quitar.'); console.error(error); return; }
-  await loadWhatsapp(); renderWhatsapp();
 }
 
 /* ---------------- LISTA DE ESPERA ---------------- */

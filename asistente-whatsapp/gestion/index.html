@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#7A4B45">
+<title>Gestión — Noemi Cuesta</title>
+<link rel="manifest" href="manifest.json">
+<link rel="icon" href="icon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="icon.svg">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<!-- ======================= LOGIN ======================= -->
+<div id="login-screen" class="login-screen">
+  <form id="login-form" class="login-card">
+    <div class="login-logo">Gestión<span>.</span></div>
+    <p class="login-sub">Acceso privado — Noemi Cuesta</p>
+    <label class="field">
+      <span>Email</span>
+      <input type="email" id="login-email" autocomplete="username" required>
+    </label>
+    <label class="field">
+      <span>Contraseña</span>
+      <input type="password" id="login-password" autocomplete="current-password" required>
+    </label>
+    <p id="login-error" class="login-error" hidden></p>
+    <button type="submit" class="btn btn-primary btn-block" id="login-submit">Entrar</button>
+    <p class="login-hint">¿No tienes usuario todavía? Créalo desde el panel de Supabase (Authentication → Users) siguiendo el README del proyecto.</p>
+  </form>
+</div>
+
+<!-- ======================= ERROR DE CARGA ======================= -->
+<div id="load-error-screen" class="login-screen" hidden>
+  <div class="login-card" style="text-align:center;">
+    <div class="login-logo">Gestión<span>.</span></div>
+    <p class="login-sub" style="margin-bottom:0;">⚠️ No se pudieron cargar tus datos</p>
+    <p style="font-size:13.5px;color:rgba(46,35,32,0.65);">
+      Tus citas, gastos y clientas siguen guardados sin ningún problema — están en tu base de
+      datos, no en esta pantalla. Esto solo significa que ahora mismo no se ha podido conectar
+      (revisa tu conexión a internet) o que hay un fallo en la publicación de la web.
+    </p>
+    <p id="load-error-detail" style="font-size:12px;color:rgba(46,35,32,0.45);"></p>
+    <button type="button" class="btn btn-primary btn-block" id="load-retry-btn">Reintentar</button>
+  </div>
+</div>
+
+<!-- ======================= APP SHELL ======================= -->
+<div id="app" class="app" hidden>
+
+  <header class="topbar">
+    <button id="menu-btn" class="icon-btn" aria-label="Abrir menú">
+      <svg viewBox="0 0 24 24" width="24" height="24"><path d="M3 6h18M3 12h18M3 18h18" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+    </button>
+    <div class="topbar-title" id="topbar-title">Inicio</div>
+    <button id="logout-btn" class="icon-btn" aria-label="Cerrar sesión" title="Cerrar sesión">
+      <svg viewBox="0 0 24 24" width="20" height="20"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none"/></svg>
+    </button>
+  </header>
+
+  <div id="drawer-overlay" class="drawer-overlay" hidden></div>
+  <nav id="drawer" class="drawer" aria-hidden="true">
+    <div class="drawer-header">
+      <div class="drawer-logo">Gestión<span>.</span></div>
+      <div class="drawer-business" id="drawer-business">Noemi Cuesta</div>
+    </div>
+    <ul class="drawer-menu">
+      <li><a href="#/inicio" data-route="inicio">🏠 Inicio</a></li>
+      <li><a href="#/plan-anual" data-route="plan-anual">📅 Plan anual</a></li>
+      <li><a href="#/plan-mensual" data-route="plan-mensual">🗓️ Plan mensual</a></li>
+      <li><a href="#/plan-semanal" data-route="plan-semanal">📆 Plan semanal</a></li>
+      <li><a href="#/plan-diario" data-route="plan-diario">📋 Plan diario</a></li>
+      <li><a href="#/reservas-online" data-route="reservas-online">🌐 Reservas online</a></li>
+      <li><a href="#/lista-espera" data-route="lista-espera">⏳ Lista de espera</a></li>
+      <li><a href="#/whatsapp" data-route="whatsapp">💬 WhatsApp</a></li>
+      <li><a href="#/clientes" data-route="clientes">👥 Clientes</a></li>
+      <li><a href="#/personal" data-route="personal">👤 Información personal</a></li>
+      <li><a href="#/gastos" data-route="gastos">💶 Diario de gastos</a></li>
+      <li><a href="#/produccion" data-route="produccion">📊 Análisis de producción</a></li>
+      <li><a href="#/stock" data-route="stock">🧴 Productos / Stock</a></li>
+      <li><a href="#/por-pedir" data-route="por-pedir">🛒 Por pedir</a></li>
+      <li><a href="#/servicios" data-route="servicios">✂️ Servicios y precios</a></li>
+      <li><a href="#/archivo" data-route="archivo">🗄️ Archivo</a></li>
+    </ul>
+  </nav>
+
+  <main id="content" class="content"></main>
+
+  <div id="toast" class="toast" hidden></div>
+  <div id="modal-root"></div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+<script src="config.js"></script>
+<script type="module" src="js/main.js"></script>
+</body>
+</html>
