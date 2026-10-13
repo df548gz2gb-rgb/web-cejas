@@ -602,7 +602,15 @@ async function procesarBoton(c: Conv, id: string) {
     case "ccanok": {
       const ci = await buscarCita(c, valor);
       if (!ci) return cambiarOCancelar(c);
-      const { error } = await db.rpc("rpc_cancel_booking", { p_token: ci.management_token });
+      // Igual que la web (/reservas/gestionar): la función cancel-booking cancela
+      // y envía el SMS/email de cancelación. Si falla, se cancela directamente.
+      let error: { message?: string } | null = null;
+      const fn = await db.functions.invoke("cancel-booking", { body: { management_token: ci.management_token } });
+      if (fn.error || fn.data?.error) {
+        console.error("cancel-booking", fn.error || fn.data?.error);
+        ({ error } = await db.rpc("rpc_cancel_booking", { p_token: ci.management_token }));
+        if (error && String(error.message).includes("ya estaba cancelada")) error = null;
+      }
       if (error) {
         console.error("cancelar", error);
         return derivar(c, "Ha habido un problema al cancelar 🙈 Noemi te escribirá enseguida.", `Error al cancelar: ${describirCita(ci)}`);

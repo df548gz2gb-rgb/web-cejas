@@ -13,6 +13,7 @@ El asistente **no tiene agenda propia**. Usa exactamente lo mismo que tu página
 - **Sin señal:** las citas por WhatsApp quedan confirmadas al momento, sin pagar nada. En Reservas online aparecen como reserva online con pago «No requerido» y la nota «Reservada por WhatsApp (sin señal)». Tu web de reservas las respeta igual que una cita pagada.
 - **SMS de confirmación:** la clienta recibe el mismo SMS/email que cuando creas tú una cita en Gestión (función `notify-appointment`), y por WhatsApp el enlace al consentimiento.
 - **Retoques:** solo se reservan directamente si la clienta tiene una micropigmentación **cobrada** en tu Gestión. Si no, se te pasa a ti.
+- **Cancelaciones con SMS:** el asistente cancela con tu función `cancel-booking`, igual que la página «gestionar» de tu web, así que la clienta recibe el mismo SMS/email de cancelación (Twilio/Resend).
 - **Cambios y cancelaciones:** dentro de tu plazo de cancelación. Si queda menos tiempo, te lo pasa a ti. Quedan en el historial de la cita. Las citas que pusiste tú a mano también te las pasa a ti.
 - **Una sola reserva activa por clienta**, como en la web.
 - **Agenda online cerrada:** el asistente no reserva y te pasa el chat.
