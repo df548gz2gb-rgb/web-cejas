@@ -2,6 +2,17 @@
 
 *Análisis previo a cualquier desarrollo. Fecha: 13 de octubre de 2026.*
 
+> **Decisiones tomadas (13 oct 2026)**
+> - IA: la opción más barata, **Claude Haiku 5.5**.
+> - Retoque cuando dice "me la hizo Noemi" pero no consta: **se deriva a Noemi**.
+> - Agenda por **franjas fijas**: lunes y miércoles (retoque/removedor 18:45–19:15, micro 19:15–20:45); sábados (micro 9:30, 11:00, 16:00, 17:30 y 19:00; retoque/removedor 12:30 y 13:15).
+> - Número del negocio: **644 924 469** (WhatsApp Business desde julio, apto para coexistencia).
+> - Avisos de chats pendientes: al **WhatsApp personal 644 737 315**.
+> - Recordatorios a clientas: se mantiene lo actual (SMS al reservar y recordatorios manuales). Los recordatorios automáticos por WhatsApp quedan como extra opcional.
+> - Combo amigas: se deriva a Noemi para organizar las dos citas.
+>
+> Los pasos para ponerlo en marcha están en **[guia-paso-a-paso.md](guia-paso-a-paso.md)**.
+
 ---
 
 ## 0. Resumen
@@ -15,7 +26,7 @@
 | IA | Claude (Anthropic), usada solo para entender texto libre y responder dudas | De menos de 1 € a unos 15 €/mes, según el modelo (ver §4) |
 | Clientas | La tabla `clients` de tu web, más dos campos nuevos | 0 € |
 | Agenda | El calendario de tu panel (tabla `appointments`), más una tabla de horario | 0 € |
-| Avisos para ti | Pestaña "Pendientes" en tu panel y notificación push en el iPhone/Mac (Telegram o ntfy, gratis) | 0 € |
+| Avisos para ti | Pestaña "WhatsApp" en tu panel y aviso a tu WhatsApp personal | 0 € (o céntimos por aviso, ver §3.6) |
 | **Total** | | **≈ 10–25 €/mes**, la mayor parte fija del proveedor de WhatsApp |
 
 Los botones **sí son posibles** con la API oficial (no con la app normal de WhatsApp Business), con límites de texto que obligan a acortar dos de tus opciones (ver §5).
@@ -146,7 +157,7 @@ Este asistente hace tareas acotadas: entender fechas, responder con tu texto de 
 | Email (ya tienes Formspree) | 0 € (50 al mes en el plan gratuito) | Mail | Mail |
 | Mensaje de WhatsApp a tu número **personal** | ~2–3 céntimos (plantilla) | Sí | Sí |
 
-**Recomendación:** pestaña "Pendientes" + **Telegram**. Es gratis, inmediato y el aviso llevará el nombre, el motivo y un botón para abrir el chat de WhatsApp. Como con la coexistencia ves el chat y las fotos en tu app de WhatsApp Business, el aviso solo tiene que decirte "te toca a ti con X".
+**Elegido:** aviso a tu **WhatsApp personal**. Para que salga casi gratis, el aviso lleva un botón «Visto»: al pulsarlo se abre una ventana de 24 h en la que los siguientes avisos son gratis. Fuera de esa ventana, cada aviso cuesta lo que una plantilla de utilidad (unos 2–3 céntimos).
 
 ---
 
@@ -316,7 +327,9 @@ Leyenda: 👩 lo haces tú (te guiaré click a click) · 🤖 lo hago yo (códig
 
 ---
 
-## 11. Preguntas que necesito que me respondas
+## 11. Preguntas iniciales
+
+*Respondidas el 13 de octubre: ver «Decisiones tomadas» al principio. Las preguntas que siguen abiertas están al final de la [guía paso a paso](guia-paso-a-paso.md).*
 
 1. **Modelo de IA:** ¿Claude Haiku 5.5 (menos de 1 €/mes) u Opus 5.5 (unos 14 €/mes, más capaz)? ¿O prefieres probar los dos en la fase 4?
 2. **Retoque, cuando la clienta dice "me la hiciste tú" pero no consta en la base de datos:**
